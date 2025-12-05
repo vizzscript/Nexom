@@ -21,9 +21,9 @@ console.log("Email Service Config:", {
 export const sendOtpEmail = async (email: string, otp: string) => {
     try {
         const mailOptions = {
-            from: `"Hoora App" <${config.smtp.user}>`,
+            from: `"Nexom App" <${config.smtp.user}>`,
             to: email,
-            subject: "Your OTP for Hoora App",
+            subject: "Your OTP for Nexom App",
             text: `Your OTP is ${otp}. It is valid for 5 minutes.`,
             html: `<p>Your OTP is <b>${otp}</b>. It is valid for 5 minutes.</p>`,
         };

@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import config from "../config/config";
-import { User } from "../database";
+import User from "../database/models/UserModel";
 import EmailService from "../services/EmailService";
 import { ApiError } from "../utils";
 
@@ -23,7 +23,7 @@ const createSendToken = (user: any, res: Response) => {
     const token = jwt.sign(
         { id: user._id, email: user.email },
         jwtSecret,
-        { expiresIn: "1d" }
+        { expiresIn: "15m" }
     );
 
     if (config.env === "production") cookieOptions.secure = true;

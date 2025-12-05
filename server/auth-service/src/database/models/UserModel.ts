@@ -44,7 +44,7 @@ const UserSchema: Schema = new Schema(
     }
 );
 
-
+// Mongoose will cache this model, so it's safe to call mongoose.model() multiple times
 const User = mongoose.model<IUser>("User", UserSchema);
 
 export default User;

@@ -1,5 +1,6 @@
 import express, { Express } from "express";
 import { Server } from "http";
+import mongoose from "mongoose";
 import config from "./config/config";
 import { connectDB } from "./database";
 import { errorConverter, errorHandler } from "./middleware";
@@ -10,26 +11,35 @@ const app: Express = express();
 let server: Server;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(userRouter);
+app.use("/api/v1/auth", userRouter);
 app.use(errorConverter);
 app.use(errorHandler);
 
-connectDB();
-
-server = app.listen(config.PORT, () => {
-    console.log(`Server is running on PORT ${config.PORT}`);
-});
-
-const initializeRabbitMQClient = async () => {
+const startServer = async () => {
     try {
-        await rabbitMQService.init();
-        console.log("RabbitMQ client initialized and listening for messages.");
+        // Connect to database first
+        await connectDB(mongoose, config.MONGO_URI as string);
+
+        // Start HTTP server after database is connected
+        server = app.listen(config.AUTH_PORT, () => {
+            console.log(`Server is running on PORT ${config.AUTH_PORT}`);
+        });
+
+        // Initialize RabbitMQ client (non-blocking if it fails)
+        try {
+            await rabbitMQService.init();
+            console.log("RabbitMQ client initialized and listening for messages.");
+        } catch (rabbitMQError) {
+            console.warn("Warning: RabbitMQ connection failed. Server will continue without message queue functionality.");
+            console.warn("RabbitMQ Error:", rabbitMQError);
+        }
     } catch (err) {
-        console.log("Failed to initialize RabbitMQ client: ", err);
+        console.error("Failed to start server:", err);
+        process.exit(1);
     }
 };
 
-initializeRabbitMQClient();
+startServer();
 
 const exitHandler = () => {
     if (server) {

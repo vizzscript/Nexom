@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "lib": [
+      "dom",
+      "es6",
+      "es2017",
+      "esnext.asynciterable"
+    ],
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    /* IMPORTANT FIXES */
+    "rootDir": "..", // Allow TS to compile files from parent server directory
+    "baseUrl": ".", // Enable aliases
+    "paths": {
+      "@/*": [
+        "src/*"
+      ],
+      "@models/*": [
+        "src/models/*"
+      ],
+      "@common/*": [
+        "../common/*"
+      ]
+    },
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "outDir": "./dist",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true
+  },
+  /* IMPORTANT FIX */
+  "include": [
+    "src/**/*",
+    "../common/**/*"
+  ]
+}

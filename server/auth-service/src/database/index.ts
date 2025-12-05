@@ -1,4 +1,4 @@
-import User, { IUser } from "./models/UserModel";
-import { connectDB } from "./connection";
+import { connectDB } from "../../../common/db/connection";
 
-export { User, IUser, connectDB };
+export { connectDB };
+

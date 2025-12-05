@@ -1,7 +1,7 @@
 import amqp, { Channel, ChannelModel } from "amqplib";
 
 import config from "../config/config";
-import { User } from "../database";
+import User from "../database/models/UserModel";
 import { ApiError } from "../utils";
 
 class RabbitMQService {
@@ -11,7 +11,7 @@ class RabbitMQService {
     private channel!: Channel;
 
     constructor() {
-        this.init();
+        // Don't call init() here - let server.ts call it explicitly after DB connection
     }
 
     async init() {
