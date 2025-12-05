@@ -87,7 +87,7 @@ Create `.env` files for each service:
 
 **server/auth-service/.env**:
 ```env
-PORT=3001
+PORT=8081
 MONGO_URI=mongodb://localhost:27017/nexom
 JWT_SECRET=your-super-secret-jwt-key-change-this
 NODE_ENV=development
@@ -157,7 +157,7 @@ npm start
 
 ## 📡 API Endpoints
 
-### Auth Service (Port 3001)
+### Auth Service (Port 8081)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -165,7 +165,7 @@ npm start
 | POST | `/api/v1/auth/verify-otp` | Verify email OTP |
 | POST | `/api/v1/auth/resend-otp` | Resend OTP |
 
-### Service Catalog (Port 3002)
+### Service Catalog (Port 8082)
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
