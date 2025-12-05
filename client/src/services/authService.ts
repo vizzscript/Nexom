@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8081/api/v1/auth';
 
+const API_URL = import.meta.env.VITE_API_URL;
 export const authService = {
     sendOtp: async (email: string) => {
         const response = await axios.post(`${API_URL}/send-otp`, { email });
