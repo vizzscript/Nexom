@@ -1,6 +1,6 @@
 # Development Challenges & Solutions
 
-This document chronicles the technical challenges encountered during the development of the Hoora microservices architecture and their resolutions.
+This document chronicles the technical challenges encountered during the development of the Nexom microservices architecture and their resolutions.
 
 ---
 
