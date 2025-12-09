@@ -134,8 +134,8 @@ const BookService: React.FC = () => {
                                                             key={service.id}
                                                             onClick={() => setFormData({ ...formData, serviceId: service.id })}
                                                             className={`cursor-pointer p-6 rounded-2xl border-2 transition-all duration-300 hover:shadow-md ${formData.serviceId === service.id
-                                                                    ? 'border-[#d4af37] bg-[#d4af37]/5'
-                                                                    : 'border-slate-100 hover:border-[#d4af37]/50'
+                                                                ? 'border-[#d4af37] bg-[#d4af37]/5'
+                                                                : 'border-slate-100 hover:border-[#d4af37]/50'
                                                                 }`}
                                                         >
                                                             <div className="flex justify-between items-start mb-4">
@@ -180,8 +180,8 @@ const BookService: React.FC = () => {
                                                                     key={i}
                                                                     onClick={() => setFormData({ ...formData, date: dateStr })}
                                                                     className={`p-3 rounded-xl border text-center transition-all ${isSelected
-                                                                            ? 'bg-[#d4af37] text-white border-[#d4af37] shadow-md'
-                                                                            : 'bg-white border-slate-200 hover:border-[#d4af37] text-slate-600'
+                                                                        ? 'bg-[#d4af37] text-white border-[#d4af37] shadow-md'
+                                                                        : 'bg-white border-slate-200 hover:border-[#d4af37] text-slate-600'
                                                                         }`}
                                                                 >
                                                                     <span className="block text-xs opacity-80 mb-1">{date.toLocaleDateString('en-US', { month: 'short' })}</span>
@@ -201,8 +201,8 @@ const BookService: React.FC = () => {
                                                                 key={time}
                                                                 onClick={() => setFormData({ ...formData, time })}
                                                                 className={`py-3 px-4 rounded-xl text-sm font-medium border transition-all ${formData.time === time
-                                                                        ? 'bg-[#d4af37] text-white border-[#d4af37]'
-                                                                        : 'bg-white border-slate-200 hover:border-[#d4af37] text-slate-600'
+                                                                    ? 'bg-[#d4af37] text-white border-[#d4af37]'
+                                                                    : 'bg-white border-slate-200 hover:border-[#d4af37] text-slate-600'
                                                                     }`}
                                                             >
                                                                 {time}
