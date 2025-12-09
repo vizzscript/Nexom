@@ -1,14 +1,31 @@
+// Home.tsx
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, Clock, Leaf, Shield, Star } from 'lucide-react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useServicesData } from '../services/useServicesData'; // Import the new hook
 
 const Home: React.FC = () => {
+    const { services, loading } = useServicesData();
+
+    // Select services for the homepage preview (e.g., top 3 or featured)
+    const previewServices = useMemo(() => {
+        if (!services || services.length === 0) return [];
+
+        // If the FrontendService interface includes 'isFeatured' from the hook:
+        const featured = services.filter(service => service.isFeatured).slice(0, 3);
+
+        // Fallback: use the first 3 services if no features are explicitly marked
+        return featured.length > 0 ? featured : services.slice(0, 3);
+
+    }, [services]);
+
     return (
         <div className="overflow-hidden">
-            {/* Hero Section */}
+            {/* ... (Hero Section remains the same) ... */}
             <section className="relative min-h-screen flex items-center pt-20 bg-[#f8fafc]">
                 {/* Background Elements */}
+                {/* ... (Background elements) ... */}
                 <div className="absolute top-0 right-0 w-[55%] h-full hidden lg:block overflow-hidden">
                     <div className="absolute inset-0 bg-slate-50/50" />
                     <div
@@ -143,6 +160,7 @@ const Home: React.FC = () => {
             </section>
 
             {/* Features Section */}
+            {/* ... (Features Section remains the same) ... */}
             <section className="section-padding bg-white">
                 <div className="container mx-auto">
                     <div className="text-center max-w-2xl mx-auto mb-16">
@@ -186,12 +204,13 @@ const Home: React.FC = () => {
                 </div>
             </section>
 
-            {/* Services Preview */}
+
+            {/* Services Preview - NOW DYNAMICALLY FETCHED */}
             <section className="section-padding bg-[#f8fafc]">
                 <div className="container mx-auto">
                     <div className="flex justify-between items-end mb-12">
                         <div>
-                            <h2 className="text-4xl font-bold font-serif mb-4">Our Services</h2>
+                            <h2 className="text-4xl font-bold font-serif mb-4">Our Featured Services</h2>
                             <p className="text-slate-600 max-w-xl">
                                 From deep cleaning to regular maintenance, we offer a comprehensive range of services.
                             </p>
@@ -201,55 +220,70 @@ const Home: React.FC = () => {
                         </Link>
                     </div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {[
-                            {
-                                title: "Deep Cleaning",
-                                price: "From $199",
-                                image: "https://images.unsplash.com/photo-1527512860163-49091831a320?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-                                features: ["Deep dusting & sanitization", "Carpet & upholstery care", "Window cleaning"]
-                            },
-                            {
-                                title: "Regular Maintenance",
-                                price: "From $89",
-                                image: "https://images.unsplash.com/photo-1584622050111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-                                features: ["Weekly/Bi-weekly visits", "Surface cleaning", "Bathroom & kitchen sanitization"]
-                            },
-                            {
-                                title: "Move-in/Move-out",
-                                price: "From $299",
-                                image: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-                                features: ["Complete empty home clean", "Inside cabinets & appliances", "Wall washing"]
-                            }
-                        ].map((service, index) => (
-                            <div key={index} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
-                                <div className="relative h-64 overflow-hidden">
-                                    <img
-                                        src={service.image}
-                                        alt={service.title}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-1 rounded-full text-sm font-bold text-slate-900">
-                                        {service.price}
+                    {loading && (
+                        <div className="text-center py-10 text-slate-500">
+                            Loading top services for preview...
+                        </div>
+                    )}
+
+                    {!loading && previewServices.length === 0 && (
+                        <div className="text-center py-10 text-slate-500">
+                            No services available to display.
+                        </div>
+                    )}
+
+                    {!loading && previewServices.length > 0 && (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {previewServices.map((service) => (
+                                <motion.div
+                                    key={service.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5 }}
+                                    // FIX 1: Make the card a flex column, full height
+                                    className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
+                                >
+                                    <div className="relative h-64 overflow-hidden flex-shrink-0">
+                                        <img
+                                            src={service.image}
+                                            alt={service.title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-1 rounded-full text-sm font-bold text-slate-900">
+                                            {`From $${service.price}`}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="p-8">
-                                    <h3 className="text-2xl font-bold font-serif mb-4">{service.title}</h3>
-                                    <ul className="space-y-3 mb-8">
-                                        {service.features.map((feature, idx) => (
-                                            <li key={idx} className="flex items-center gap-3 text-slate-600">
-                                                <CheckCircle className="w-5 h-5 text-[#d4af37]" />
-                                                {feature}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    <button className="w-full btn btn-outline group-hover:bg-[#d4af37] group-hover:text-white group-hover:border-[#d4af37]">
-                                        Book Now
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+
+                                    {/* FIX 2: Apply flex-col and flex-grow to the padded content area */}
+                                    <div className="p-6 flex flex-col flex-grow">
+
+                                        <h3 className="text-xl font-bold font-serif mb-4 h-14 line-clamp-2">{service.title}</h3>
+
+                                        {/* FIX 3: This wrapper takes up all available vertical space */}
+                                        <div className="flex-grow">
+                                            <ul className="space-y-4 mb-8">
+                                                {/* Show first 3 features */}
+                                                {service.features.slice(0, 3).map((feature, idx) => (
+                                                    <li key={idx} className="flex items-center gap-3 text-slate-600 text-sm">
+                                                        <CheckCircle className="w-5 h-5 text-[#d4af37] flex-shrink-0" />
+                                                        {feature}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        {/* FIX 4: Button is pushed to the bottom */}
+                                        <Link
+                                            to={`/services`} // Changed to /services, assuming service ID is handled there
+                                            className="w-full btn btn-outline group-hover:bg-[#d4af37] group-hover:text-white group-hover:border-[#d4af37] flex items-center justify-center mt-auto"
+                                        >
+                                            Book Now
+                                        </Link>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </section>
         </div>

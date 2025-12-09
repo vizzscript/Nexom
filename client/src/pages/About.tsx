@@ -12,7 +12,7 @@ const About: React.FC = () => {
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-5xl md:text-6xl font-bold font-serif mb-6"
+                        className="text-5xl md:text-6xl font-bold font-serif mb-6 text-white"
                     >
                         Our Story
                     </motion.h1>

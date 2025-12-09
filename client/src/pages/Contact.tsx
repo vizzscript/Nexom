@@ -8,7 +8,7 @@ const Contact: React.FC = () => {
             {/* Header */}
             <section className="bg-slate-900 text-white py-20">
                 <div className="container mx-auto text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold font-serif mb-6">Get in Touch</h1>
+                    <h1 className="text-4xl md:text-5xl font-bold font-serif mb-6 text-white">Get in Touch</h1>
                     <p className="text-slate-400 max-w-2xl mx-auto text-lg">
                         We're here to help. Reach out to us for any inquiries, bookings, or feedback.
                     </p>
