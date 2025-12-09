@@ -3,12 +3,15 @@ import mongoose from "mongoose";
 import { connectDB } from "../../common/db/connection";
 import config from "./config/config";
 import { errorConverter, errorHandler } from "./middleware";
+import categoryRouter from "./routes/category.routes";
 import serviceRouter from "./routes/service.routes";
 
 const app = express();
 app.use(express.json());
 
 app.use("/api/v1/services", serviceRouter);
+app.use("/api/v1/categories", categoryRouter);
+
 
 // Error handling middleware (must be after routes)
 app.use(errorConverter);
