@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle, Clock, Shield, Star } from 'lucide-react';
+import { ArrowRight, CheckCircle, Clock, Leaf, Shield, Star } from 'lucide-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -9,11 +9,21 @@ const Home: React.FC = () => {
             {/* Hero Section */}
             <section className="relative min-h-screen flex items-center pt-20 bg-[#f8fafc]">
                 {/* Background Elements */}
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-[#f1f5f9] hidden lg:block" />
+                <div className="absolute top-0 right-0 w-[55%] h-full hidden lg:block overflow-hidden">
+                    <div className="absolute inset-0 bg-slate-50/50" />
+                    <div
+                        className="absolute inset-0 opacity-[0.3]"
+                        style={{
+                            backgroundImage: 'radial-gradient(#64748b 2px, transparent 2px)',
+                            backgroundSize: '32px 32px'
+                        }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-[#f8fafc]" />
+                </div>
                 <div className="absolute top-20 right-20 w-96 h-96 bg-[#d4af37]/10 rounded-full blur-3xl" />
 
-                <div className="container mx-auto relative z-10">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                <div className="container mx-auto relative z-10 pt-12">
+                    <div className="grid lg:grid-cols-2 gap-80 items-center">
                         <motion.div
                             initial={{ opacity: 0, x: -50 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -61,34 +71,71 @@ const Home: React.FC = () => {
                             initial={{ opacity: 0, x: 50 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
-                            className="relative"
+                            className="relative h-[400px] lg:h-[500px] flex items-center justify-center lg:pl-12 scale-[0.6] sm:scale-[0.8] lg:scale-100 origin-center"
                         >
-                            <div className="relative z-10 rounded-3xl overflow-hidden shadow-2xl">
-                                <img
-                                    src="https://images.unsplash.com/photo-1581578731117-104f2a412729?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-                                    alt="Modern clean living room"
-                                    className="w-full h-auto object-cover"
+                            {/* Enhanced Background Elements */}
+                            <div className="absolute inset-0 z-0">
+                                <motion.div
+                                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#d4af37]/10 rounded-full blur-3xl"
+                                />
+                                <motion.div
+                                    animate={{ x: [-20, 20, -20], y: [-20, 20, -20] }}
+                                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                                    className="absolute top-0 right-0 w-64 h-64 bg-blue-100/30 rounded-full blur-3xl"
+                                />
+                                <motion.div
+                                    animate={{ x: [20, -20, 20], y: [20, -20, 20] }}
+                                    transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+                                    className="absolute bottom-0 left-0 w-64 h-64 bg-amber-100/30 rounded-full blur-3xl"
                                 />
                             </div>
-                            {/* Floating Card */}
+
+                            {/* Central Image */}
+                            <div className="relative z-10 w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden shadow-2xl border-8 border-white/50 backdrop-blur-sm">
+                                <img
+                                    src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                                    alt="Modern clean living room"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+
+                            {/* Orbiting Cards */}
                             <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.6 }}
-                                className="absolute -bottom-8 -left-8 bg-white p-6 rounded-2xl shadow-xl z-20 max-w-xs"
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                                className="absolute z-20 w-full h-full pointer-events-none"
                             >
-                                <div className="flex items-center gap-4 mb-4">
-                                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                        <Shield className="w-6 h-6 text-green-600" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-slate-900">100% Verified</h4>
-                                        <p className="text-xs text-slate-500">Trusted Professionals</p>
-                                    </div>
-                                </div>
-                                <p className="text-sm text-slate-600">
-                                    Every cleaner undergoes a rigorous background check and training process.
-                                </p>
+                                {[
+                                    { icon: Shield, text: "100% Verified", sub: "Trusted Pros", color: "text-green-600", bg: "bg-green-100", angle: 0 },
+                                    { icon: Star, text: "4.9/5 Rated", sub: "Top Quality", color: "text-yellow-500", bg: "bg-yellow-100", angle: 72 },
+                                    { icon: Leaf, text: "Eco-Friendly", sub: "Safe Products", color: "text-emerald-600", bg: "bg-emerald-100", angle: 144 },
+                                    { icon: Clock, text: "Punctual", sub: "On-Time Service", color: "text-blue-600", bg: "bg-blue-100", angle: 216 },
+                                    { icon: CheckCircle, text: "Fully Insured", sub: "Peace of Mind", color: "text-purple-600", bg: "bg-purple-100", angle: 288 },
+                                ].map((card, i) => (
+                                    <motion.div
+                                        key={i}
+                                        className="absolute top-1/2 left-1/2 w-48 -ml-24 -mt-10"
+                                        style={{
+                                            transform: `rotate(${card.angle}deg) translate(260px) rotate(-${card.angle}deg)`
+                                        }}
+                                    >
+                                        <motion.div
+                                            animate={{ rotate: -360 }}
+                                            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                                            className="bg-white p-4 rounded-2xl shadow-lg flex items-center gap-3 border border-slate-100 backdrop-blur-md bg-white/90"
+                                        >
+                                            <div className={`w-10 h-10 ${card.bg} rounded-full flex items-center justify-center flex-shrink-0`}>
+                                                <card.icon className={`w-5 h-5 ${card.color}`} />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-slate-900 text-sm">{card.text}</h4>
+                                                <p className="text-xs text-slate-500">{card.sub}</p>
+                                            </div>
+                                        </motion.div>
+                                    </motion.div>
+                                ))}
                             </motion.div>
                         </motion.div>
                     </div>
