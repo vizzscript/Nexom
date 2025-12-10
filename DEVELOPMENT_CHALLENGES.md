@@ -11,6 +11,8 @@ This document chronicles the technical challenges encountered during the develop
 4. [Mobile to Email OTP Migration](#4-mobile-to-email-otp-migration)
 5. [JWT Authentication Implementation](#5-jwt-authentication-implementation)
 6. [RabbitMQ Connection Blocking Server Startup](#6-rabbitmq-connection-blocking-server-startup)
+7. [Frontend Integration & CORS](#7-frontend-integration--cors)
+8. [Service Catalog Transformation (Home Cleaning)](#8-service-catalog-transformation-home-cleaning)
 
 ---
 
@@ -502,7 +504,7 @@ node test-db-connection.js
 
 ### Test API Endpoints
 ```bash
-curl -X POST http://localhost:8081/send-otp \
+curl -X POST http://localhost:3001/api/v1/auth/send-otp \
   -H "Content-Type: application/json" \
   -d '{"email": "test@example.com"}'
 ```
@@ -538,4 +540,97 @@ curl -X POST http://localhost:8081/send-otp \
 
 ---
 
-*Last Updated: December 5, 2025*
+*Last Updated: December 10, 2025*
+
+---
+
+## 7. Frontend Integration & CORS
+
+### Challenge
+Connecting the React (Vite) frontend with multiple backend microservices running on different ports, while handling Cross-Origin Resource Sharing (CORS) and maintaining secure authentication state.
+
+### Issue
+Browser blocked requests from `http://localhost:5173` (Frontend) to `http://localhost:3001` (Auth) and `http://localhost:3002` (Service Catalog) due to CORS policy.
+```
+Access to fetch at 'http://localhost:3001/api/v1/auth/verify-otp' from origin 'http://localhost:5173' has been blocked by CORS policy.
+```
+
+### Solution
+1. **Backend Configuration**:
+   Enabled CORS in both `auth-service` and `service-catalog` with specific origin and credentials support.
+
+   ```typescript
+   // server.ts (in both services)
+   import cors from "cors";
+   
+   app.use(cors({
+       origin: process.env.NEXOM_FRONTEND_URL || "http://localhost:5173",
+       credentials: true // Important for cookies/sessions if used
+   }));
+   ```
+
+2. **Frontend Environment Variables**:
+   Configured dynamic base URLs for API calls using Vite's environment variables.
+   ```typescript
+   // client/.env
+   VITE_AUTH_SERVICE_URL=http://localhost:3001/api/v1/auth
+   VITE_SERVICE_CATALOG_URL=http://localhost:3002/api/v1
+   ```
+
+### UI Implementation
+**Challenge**: Creating a premium, engaging "Home" page that stands out.
+**Solution**: Implemented a "Circular Floating Card" animation using CSS transforms and keyframes to showcase service categories (Cleaning, Plumbing, etc.) in a rotating orbit around a central hero text.
+
+### Lessons Learned
+- Always configure CORS with specific origins in production; `*` is unsafe.
+- Use environment variables for all API endpoints to switch easily between dev/prod.
+- Visual aesthetics (animations) significantly improve perceived application quality.
+
+---
+
+## 8. Service Catalog Transformation (Home Cleaning)
+
+### Challenge
+Transforming a generic "Service Catalog" into a specialized "Home Cleaning Services" platform requiring specific data structures (property types, room counts) and advanced filtering.
+
+### Changes Required
+1. **Data Modeling**:
+   - Created `Category` model for Property Types (Apartment, Villa) and Service Types (Deep Cleaning, Move-in).
+   - Extended `Service` model with cleaning-specific fields: `propertyType`, `numberOfRooms`, `numberOfBathrooms`, `areaSize`.
+
+2. **Advanced Filtering**:
+   - Implemented complex query building in `ServiceService` to filter by multiple criteria simultaneously.
+
+### Implementation Highlights
+
+**Service Model Extension**:
+```typescript
+const ServiceSchema = new Schema({
+    // ... basic fields
+    propertyType: { type: Schema.Types.ObjectId, ref: 'Category' },
+    serviceType: { type: Schema.Types.ObjectId, ref: 'Category' },
+    specifications: {
+        numberOfRooms: Number,
+        numberOfBathrooms: Number,
+        areaSize: Number, // in sq ft
+        furnished: Boolean
+    }
+});
+```
+
+**Filtering Logic**:
+```typescript
+// service.service.ts
+const filter: any = {};
+if (query.propertyType) filter.propertyType = query.propertyType;
+if (query.minPrice || query.maxPrice) {
+    filter.price = {};
+    if (query.minPrice) filter.price.$gte = Number(query.minPrice);
+    if (query.maxPrice) filter.price.$lte = Number(query.maxPrice);
+}
+```
+
+### Lessons Learned
+- Domain-specific requirements often necessitate schema denormalization or specific field extensions.
+- Building flexible filtering logic early saves time as requirements grow.
+- Separating "Categories" into their own model allows for dynamic frontend dropdowns without code changes.
