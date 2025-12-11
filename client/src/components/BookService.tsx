@@ -1,6 +1,28 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Calendar, Check, Clock, Home, MapPin, Shield, Star, User } from 'lucide-react';
-import React, { useState } from 'react';
+// Ensure all necessary icons and types are imported
+import { ArrowLeft, ArrowRight, Calendar, Check, CheckCircle, Clock, Home, MapPin, Shield, Star, User, type LucideIcon } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useServicesData } from '../services/useServicesData'; // Import the dynamic data hook
+
+// ====================================================================
+// INTERFACES (Assuming these are the fields returned by your hook)
+// ====================================================================
+
+// Define the shape of the raw service data returned by useServicesData
+interface FetchedService {
+    id: string;
+    title: string;
+    price: number;
+    description: string;
+    // Assume other fields like category, features, etc., are also present
+}
+
+// Define the structure needed for display in the BookService component
+interface AugmentedService extends FetchedService {
+    duration: string;
+    icon: LucideIcon; // Type imported from 'lucide-react'
+}
 
 // Types for form data
 interface BookingData {
@@ -15,25 +37,99 @@ interface BookingData {
     };
 }
 
-// Added more services to demonstrate scrolling capabilities
-const services = [
-    { id: 'deep-clean', title: 'Deep Cleaning', price: 199, duration: '4-5 Hours', description: 'Intensive cleaning for every corner.', icon: Star },
-    { id: 'maintenance', title: 'Regular Maintenance', price: 89, duration: '2-3 Hours', description: 'Standard weekly or bi-weekly clean.', icon: Home },
-    { id: 'move-in', title: 'Move-in/Move-out', price: 299, duration: '6+ Hours', description: 'Empty home restoration cleaning.', icon: Shield },
-    { id: 'post-reno', title: 'Post-Renovation', price: 349, duration: '8+ Hours', description: 'Dust removal after construction.', icon: Home },
-    { id: 'office', title: 'Office Cleaning', price: 159, duration: '3-4 Hours', description: 'Professional workspace cleaning.', icon: Check },
-];
+// ====================================================================
+// HELPER LOGIC FOR AUGMENTATION
+// ====================================================================
 
+// Helper function to parse query parameters
+const useQuery = () => {
+    const { search } = useLocation();
+    return useMemo(() => new URLSearchParams(search), [search]);
+};
+
+// TODO: In future will make this dynamic
 const timeSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
 
+const augmentServices = (services: FetchedService[]): AugmentedService[] => {
+    if (!services || services.length === 0) return [];
+
+    return services.map(service => {
+        let iconComponent: LucideIcon = Home; // Default icon
+        let durationString: string = '2-3 Hours'; // Default duration
+
+        // Logic to assign icon and duration based on service title
+        const titleLower = service.title.toLowerCase();
+
+        if (titleLower.includes('deep')) {
+            iconComponent = Star;
+            durationString = '4-5 Hours';
+        } else if (titleLower.includes('maintenance') || titleLower.includes('regular')) {
+            iconComponent = Clock;
+            durationString = '2-3 Hours';
+        } else if (titleLower.includes('move-in') || titleLower.includes('move-out')) {
+            iconComponent = MapPin;
+            durationString = '6+ Hours';
+        } else if (titleLower.includes('renovation') || titleLower.includes('post-reno')) {
+            iconComponent = Shield;
+            durationString = '8+ Hours';
+        } else if (titleLower.includes('office')) {
+            iconComponent = Check;
+            durationString = '3-4 Hours';
+        }
+
+        return {
+            ...service,
+            icon: iconComponent,
+            duration: durationString,
+        } as AugmentedService;
+    });
+};
+
+// ====================================================================
+// COMPONENT
+// ====================================================================
+
 const BookService: React.FC = () => {
+    // 0. Get URL query parameters
+    const query = useQuery();
+    const initialServiceId = query.get('serviceId');
+
+    // 1. Fetch data dynamically
+    const { services, loading } = useServicesData();
+
+    // 2. Augment data using useMemo for performance
+    const augmentedServices = useMemo(() => augmentServices(services as FetchedService[]), [services]);
+
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState<BookingData>({
-        serviceId: null,
+        // Initialize with serviceId from URL if present
+        serviceId: initialServiceId || null,
         date: null,
         time: null,
         details: { name: '', email: '', address: '', notes: '' }
     });
+
+    // Effect to handle initial service selection and step advance
+    useEffect(() => {
+        // Only run if data is loaded and we have an initial ID to process
+        if (augmentedServices.length > 0 && initialServiceId && formData.serviceId === initialServiceId && step === 1) {
+            const serviceExists = augmentedServices.some(s => s.id === initialServiceId);
+
+            if (serviceExists) {
+                // Skip Step 1 and move to Step 2 for scheduling
+                setStep(2);
+
+                // >>> FIX 1: Ensure page scrolls to top when skipping step 1 <<<
+                window.scrollTo(0, 0);
+
+            } else {
+                // If ID is invalid, clear it and let the user choose
+                setFormData(prev => ({ ...prev, serviceId: null }));
+                console.error("URL serviceId not found in data.");
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [augmentedServices, initialServiceId]); // Run when data loads or initial ID changes
 
     const handleNext = () => setStep((prev) => Math.min(prev + 1, 3));
     const handleBack = () => setStep((prev) => Math.max(prev - 1, 1));
@@ -45,7 +141,8 @@ const BookService: React.FC = () => {
         });
     };
 
-    const selectedService = services.find(s => s.id === formData.serviceId);
+    // 3. Use augmented data for lookups
+    const selectedService = augmentedServices.find(s => s.id === formData.serviceId);
 
     const slideVariants = {
         enter: (direction: number) => ({ x: direction > 0 ? 50 : -50, opacity: 0 }),
@@ -53,9 +150,29 @@ const BookService: React.FC = () => {
         exit: (direction: number) => ({ x: direction < 0 ? 50 : -50, opacity: 0 })
     };
 
+    // Helper for navigation direction (needed for framer-motion exit animation)
+    const direction = useMemo(() => (step > 1 ? 1 : -1), [step]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen pt-24 flex items-center justify-center bg-[#f8fafc]">
+                <p className="text-xl text-slate-700">Loading services for booking...</p>
+            </div>
+        );
+    }
+
+    if (augmentedServices.length === 0) {
+        return (
+            <div className="min-h-screen pt-24 flex items-center justify-center bg-[#f8fafc]">
+                <p className="text-xl text-slate-700">No services available to book at this time.</p>
+            </div>
+        );
+    }
+
+
     return (
         <div className="min-h-screen bg-[#f8fafc] pt-24 pb-12 relative overflow-hidden">
-            {/* Custom Scrollbar Styles */}
+            {/* Custom Scrollbar Styles (kept for context) */}
             <style>{`
                 .custom-scrollbar::-webkit-scrollbar {
                     width: 6px;
@@ -93,10 +210,6 @@ const BookService: React.FC = () => {
 
                         {/* MAIN WIZARD CARD */}
                         <div className="lg:col-span-2">
-                            {/* Fixed Height Container: 
-                                We use h-[650px] to ensure the card stays a consistent size.
-                                Flex-col allows us to separate header, body (scrollable), and footer.
-                            */}
                             <div className="bg-white rounded-3xl shadow-xl border border-slate-100 flex flex-col h-[650px] relative overflow-hidden">
 
                                 {/* 1. FIXED HEADER: Progress Steps */}
@@ -117,19 +230,37 @@ const BookService: React.FC = () => {
 
                                 {/* 2. SCROLLABLE BODY: The Content */}
                                 <div className="flex-1 overflow-y-auto custom-scrollbar px-8 py-2">
-                                    <AnimatePresence mode='wait' custom={step}>
+                                    <AnimatePresence mode='wait' custom={direction}>
 
                                         {/* Step 1: Services */}
                                         {step === 1 && (
                                             <motion.div
                                                 key="step1"
                                                 variants={slideVariants}
+                                                custom={direction}
                                                 initial="enter" animate="center" exit="exit"
                                                 className="space-y-4 pb-4"
                                             >
-                                                <h2 className="text-2xl font-bold font-serif mb-6 text-slate-800 sticky top-0 bg-white py-2 z-10">Select a Service</h2>
+                                                {/* Display pre-selection message if the service ID came from the URL */}
+                                                {selectedService && initialServiceId && formData.serviceId === initialServiceId ? (
+                                                    <div className="p-6 rounded-2xl border-2 border-green-200 bg-green-50/50 mb-6">
+                                                        <h3 className="text-xl font-bold font-serif text-green-700 flex items-center gap-2 mb-2">
+                                                            <CheckCircle className="w-6 h-6" /> Service Selected
+                                                        </h3>
+                                                        <p className="text-slate-700">You are booking: <span className="font-semibold">{selectedService.title}</span>. Click 'Continue' below to schedule.</p>
+                                                        <button
+                                                            onClick={() => setFormData({ ...formData, serviceId: null })}
+                                                            className="mt-3 text-sm text-slate-500 hover:text-red-500 underline"
+                                                        >
+                                                            Change Service
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <h2 className="text-2xl font-bold font-serif mb-6 text-slate-800 sticky top-0 bg-white py-2 z-10">Select a Service</h2>
+                                                )}
+
                                                 <div className="grid md:grid-cols-2 gap-4">
-                                                    {services.map((service) => (
+                                                    {augmentedServices.map((service) => ( // 4. Use augmentedServices
                                                         <div
                                                             key={service.id}
                                                             onClick={() => setFormData({ ...formData, serviceId: service.id })}
@@ -161,6 +292,7 @@ const BookService: React.FC = () => {
                                             <motion.div
                                                 key="step2"
                                                 variants={slideVariants}
+                                                custom={direction}
                                                 initial="enter" animate="center" exit="exit"
                                                 className="space-y-8 pb-4"
                                             >
@@ -218,6 +350,7 @@ const BookService: React.FC = () => {
                                             <motion.div
                                                 key="step3"
                                                 variants={slideVariants}
+                                                custom={direction}
                                                 initial="enter" animate="center" exit="exit"
                                                 className="space-y-6 pb-4"
                                             >
@@ -332,8 +465,9 @@ const BookService: React.FC = () => {
                                         </div>
                                         <div>
                                             <p className="text-sm text-slate-500">When</p>
+                                            {/* >>> FIX 2: Conditionally render date and time to avoid "date @ null" <<< */}
                                             <p className="font-semibold text-slate-900">
-                                                {formData.date ? `${formData.date} @ ${formData.time}` : '-'}
+                                                {(formData.date && formData.time) ? `${formData.date} @ ${formData.time}` : '-'}
                                             </p>
                                         </div>
                                     </div>
