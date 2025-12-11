@@ -1,12 +1,23 @@
-// Home.tsx
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, Clock, Leaf, Shield, Star } from 'lucide-react';
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useServicesData } from '../services/useServicesData'; // Import the new hook
 
+// Assuming the hook returns this structure, based on usage in the JSX
+interface HomeServicePreview {
+    id: string;
+    title: string;
+    price: number;
+    description: string;
+    image: string;
+    features: string[]; // List of features for the bullets
+    isFeatured?: boolean; // Optional flag for homepage display
+}
+
 const Home: React.FC = () => {
-    const { services, loading } = useServicesData();
+    // Note: TypeScript will require useServicesData to return HomeServicePreview[]
+    const { services, loading } = useServicesData() as { services: HomeServicePreview[], loading: boolean };
 
     // Select services for the homepage preview (e.g., top 3 or featured)
     const previewServices = useMemo(() => {
@@ -22,10 +33,9 @@ const Home: React.FC = () => {
 
     return (
         <div className="overflow-hidden">
-            {/* ... (Hero Section remains the same) ... */}
+            {/* Hero Section */}
             <section className="relative min-h-screen flex items-center pt-20 bg-[#f8fafc]">
                 {/* Background Elements */}
-                {/* ... (Background elements) ... */}
                 <div className="absolute top-0 right-0 w-[55%] h-full hidden lg:block overflow-hidden">
                     <div className="absolute inset-0 bg-slate-50/50" />
                     <div
@@ -160,7 +170,6 @@ const Home: React.FC = () => {
             </section>
 
             {/* Features Section */}
-            {/* ... (Features Section remains the same) ... */}
             <section className="section-padding bg-white">
                 <div className="container mx-auto">
                     <div className="text-center max-w-2xl mx-auto mb-16">
@@ -240,7 +249,6 @@ const Home: React.FC = () => {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.5 }}
-                                    // FIX 1: Make the card a flex column, full height
                                     className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
                                 >
                                     <div className="relative h-64 overflow-hidden flex-shrink-0">
@@ -254,12 +262,10 @@ const Home: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* FIX 2: Apply flex-col and flex-grow to the padded content area */}
                                     <div className="p-6 flex flex-col flex-grow">
 
                                         <h3 className="text-xl font-bold font-serif mb-4 h-14 line-clamp-2">{service.title}</h3>
 
-                                        {/* FIX 3: This wrapper takes up all available vertical space */}
                                         <div className="flex-grow">
                                             <ul className="space-y-4 mb-8">
                                                 {/* Show first 3 features */}
@@ -272,9 +278,9 @@ const Home: React.FC = () => {
                                             </ul>
                                         </div>
 
-                                        {/* FIX 4: Button is pushed to the bottom */}
+                                        {/* >>> UPDATED: Link to /book with serviceId query parameter <<< */}
                                         <Link
-                                            to={`/services`} // Changed to /services, assuming service ID is handled there
+                                            to={`/book?serviceId=${service.id}`}
                                             className="w-full btn btn-outline group-hover:bg-[#d4af37] group-hover:text-white group-hover:border-[#d4af37] flex items-center justify-center mt-auto"
                                         >
                                             Book Now

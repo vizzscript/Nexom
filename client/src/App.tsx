@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Services from './pages/Services';
 
 import BookService from './components/BookService';
+import ScrollToTop from './components/ScrollToTop';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
@@ -16,6 +17,7 @@ function App() {
       <div className="min-h-screen flex flex-col bg-white">
         <Navbar />
         <main className="flex-grow">
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/services" element={<Services />} />
