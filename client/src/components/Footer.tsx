@@ -1,8 +1,20 @@
 import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Sparkles, Twitter } from 'lucide-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useServicesData, type FrontendCategory } from '../services/useServicesData';
 
 const Footer: React.FC = () => {
+    // We only need categories to list the links
+    const { categories } = useServicesData();
+
+    const footLinks = [
+        { name: 'Home', path: '/' },
+        { name: 'About', path: '/about' },
+        { name: 'Services', path: '/services' },
+        { name: 'Pricing', path: '/' },
+        { name: 'Contact', path: '/contact' }
+    ];
+
     return (
         <footer className="bg-slate-900 text-slate-300 pt-16 pb-10">
             <div className="container mx-auto">
@@ -20,11 +32,7 @@ const Footer: React.FC = () => {
                         </p>
                         <div className="flex gap-4">
                             {[Facebook, Twitter, Instagram, Linkedin].map((Icon, index) => (
-                                <a
-                                    key={index}
-                                    href="#"
-                                    className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#d4af37] hover:text-white transition-all duration-300"
-                                >
+                                <a key={index} href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#d4af37] hover:text-white transition-all duration-300">
                                     <Icon className="w-5 h-5" />
                                 </a>
                             ))}
@@ -35,31 +43,30 @@ const Footer: React.FC = () => {
                     <div>
                         <h3 className="text-white font-serif text-lg mb-6">Quick Links</h3>
                         <ul className="space-y-4">
-                            {['Home', 'About Us', 'Services', 'Pricing', 'Contact'].map((item) => (
-                                <li key={item}>
-                                    <Link
-                                        to="/"
-                                        className="hover:text-[#d4af37] transition-colors flex items-center gap-2"
-                                    >
+                            {footLinks.map((item) => (
+                                <li key={item.name}>
+                                    <Link to={item.path} className="hover:text-[#d4af37] transition-colors flex items-center gap-2">
                                         <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]"></span>
-                                        {item}
+                                        {item.name}
                                     </Link>
                                 </li>
                             ))}
                         </ul>
                     </div>
 
-                    {/* Services */}
+                    {/* Updated Services Links with State */}
                     <div>
                         <h3 className="text-white font-serif text-lg mb-6">Our Services</h3>
                         <ul className="space-y-4">
-                            {['Deep Cleaning', 'Regular Maintenance', 'Move-in/Move-out', 'Post-Construction', 'Sanitization'].map((item) => (
-                                <li key={item}>
+                            {categories.map((item: FrontendCategory) => (
+                                <li key={item.id}>
                                     <Link
                                         to="/services"
+                                        // This passes the category name to the Services page
+                                        state={{ selectedCategory: item.name }}
                                         className="hover:text-[#d4af37] transition-colors"
                                     >
-                                        {item}
+                                        {item.name}
                                     </Link>
                                 </li>
                             ))}
