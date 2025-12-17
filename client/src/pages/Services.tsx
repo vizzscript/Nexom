@@ -2,7 +2,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Check, Search, Star, X } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react'; // <-- Import useEffect
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 // Import necessary types and hook from useServicesData.ts
 import { useServicesData, type FrontendCategory, type FrontendService } from '../services/useServicesData';
 
@@ -130,7 +130,11 @@ const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({ service, onClos
 // ====================================================================
 
 const Services: React.FC = () => {
-    const [selectedCategory, setSelectedCategory] = useState('All Services');
+    const location = useLocation(); // Catch the location
+    // 2. Initialize with state from location if it exists
+    const [selectedCategory, setSelectedCategory] = useState(
+        location.state?.selectedCategory || 'All Services'
+    );
 
     // Use the custom hook to fetch data, types are now explicitly used from the imported file
     const { categories, services, loading } = useServicesData();
@@ -142,6 +146,15 @@ const Services: React.FC = () => {
     // -----------------------------------------------------------
     // >>> NEW EFFECT: Disable background scrolling when modal is open <<<
     // -----------------------------------------------------------
+    // 3. Listen for changes in location state (for when user clicks footer while already on this page)
+    useEffect(() => {
+        if (location.state?.selectedCategory) {
+            setSelectedCategory(location.state.selectedCategory);
+            // Optional: Scroll to filter bar when a category is picked from footer
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [location.state]);
+
     useEffect(() => {
         if (modalServiceId) {
             document.body.style.overflow = 'hidden';
