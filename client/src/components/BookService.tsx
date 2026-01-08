@@ -292,7 +292,7 @@ const BookService: React.FC = () => {
                                                                     }`}>
                                                                     <service.icon className="w-6 h-6" />
                                                                 </div>
-                                                                <span className="text-lg font-bold text-slate-900">${service.price}</span>
+                                                                <span className="text-lg font-bold text-slate-900">₹{service.price}</span>
                                                             </div>
                                                             <h3 className="text-xl font-bold font-serif mb-2">{service.title}</h3>
                                                             <p className="text-sm text-slate-600 mb-2">{service.description}</p>
@@ -494,7 +494,7 @@ const BookService: React.FC = () => {
                                 <div className="mt-8 pt-6 border-t border-slate-100">
                                     <div className="flex justify-between items-end mb-2">
                                         <span className="text-slate-600">Total</span>
-                                        <span className="text-2xl font-bold text-slate-900">${selectedService?.price || 0}</span>
+                                        <span className="text-2xl font-bold text-slate-900">₹{selectedService?.price || 0}</span>
                                     </div>
                                     <div className="bg-slate-50 p-3 rounded-lg flex items-center gap-2 text-xs text-slate-500 mt-4">
                                         <Shield className="w-4 h-4 text-green-600" />
