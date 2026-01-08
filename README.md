@@ -16,10 +16,12 @@ Nexom follows a microservices architecture with a React frontend:
 ┌──────────────────────────▼──────────────────────────┐
 │                    API Gateway                      │
 │                   (Future)                          │
+│                    API Gateway                      │
+│                     (Future)                        │
 └─────────────────────────────────────────────────────┘
                          │
         ┌────────────────┼────────────────┐
-        │                                  │
+        │                                 │
 ┌───────▼────────┐              ┌─────────▼──────────┐
 │  Auth Service  │              │ Service Catalog    │
 │   Port: 8081   │              │   Port: 8082       │
@@ -80,159 +82,156 @@ cd Nexom
 ```
 
 ### 2. Install Dependencies
- 
- ```bash
- # Client
- cd client
- npm install
- 
- # Auth Service
- cd ../server/auth-service
- npm install
- 
- # Service Catalog
- cd ../server/service-catalog
- npm install
- ```
- 
- ### 3. Environment Configuration
- 
- Create `.env` files for each service:
- 
- **client/.env**:
- ```env
- VITE_AUTH_SERVICE_URL=http://localhost:8081/api/v1/auth
- VITE_SERVICE_CATALOG_URL=http://localhost:8082/api/v1
- ```
- 
- **server/auth-service/.env**:
- ```env
- PORT=8081
- MONGO_URI=mongodb://localhost:27017/nexom
- JWT_SECRET=your-super-secret-jwt-key-change-this
- NODE_ENV=development
- NEXOM_FRONTEND_URL=http://localhost:5173
- 
- # Email Configuration (Ethereal for development)
- EMAIL_HOST=smtp.ethereal.email
- EMAIL_PORT=587
- EMAIL_USER=your-ethereal-user
- EMAIL_PASS=your-ethereal-password
- EMAIL_FROM=noreply@nexom.com
- ```
- 
- **server/service-catalog/.env**:
- ```env
- SERVICE_PORT=8082
- ```
- 
- > **Note**: The service-catalog shares `MONGO_URI`, `JWT_SECRET`, and `NODE_ENV` from auth-service's `.env` file.
- 
- ### 4. Start MongoDB
- 
- ```bash
- # Using MongoDB service
- sudo systemctl start mongod
- 
- # Or using Docker
- docker run -d -p 27017:27017 --name nexom-mongo mongo:latest
- ```
- 
- ## 🏃 Running the Application
- 
- ### Development Mode
- 
- ```bash
- # Terminal 1 - Client
- cd client
- npm run dev
- 
- # Terminal 2 - Auth Service
- cd server/auth-service
- npm run dev
- 
- # Terminal 3 - Service Catalog
- cd server/service-catalog
- npm run dev
- ```
- 
- ### Production Build
- 
- ```bash
- # Build Client
- cd client
- npm run build
- 
- # Build Services
- cd server/auth-service
- npm run build
- npm start
- 
- cd server/service-catalog
- npm run build
- npm start
- ```
+
+```bash
+# Auth Service
+cd server/auth-service
+npm install
+
+# Service Catalog
+cd ../service-catalog
+npm install
+```
+
+### 3. Environment Configuration
+
+Create `.env` files for each service:
+
+**server/auth-service/.env**:
+```env
+PORT=8081
+MONGO_URI=mongodb://localhost:27017/nexom
+JWT_SECRET=your-super-secret-jwt-key-change-this
+NODE_ENV=development
+
+# Email Configuration (Ethereal for development)
+EMAIL_HOST=smtp.ethereal.email
+EMAIL_PORT=587
+EMAIL_USER=your-ethereal-user
+EMAIL_PASS=your-ethereal-password
+EMAIL_FROM=noreply@nexom.com
+```
+
+**server/service-catalog/.env**:
+```env
+SERVICE_PORT=8082
+```
+
+> **Note**: The service-catalog shares `MONGO_URI`, `JWT_SECRET`, and `NODE_ENV` from auth-service's `.env` file.
+
+### 4. Start MongoDB or Use MongoDB Atlas
+
+You can either start MongoDB locally or use MongoDB Atlas for production.
+
+#### Local MongoDB
+
+```bash
+# Using MongoDB service
+sudo systemctl start mongod
+
+# Or using Docker
+docker run -d -p 27017:27017 --name nexom-mongo mongo:latest
+```
+
+#### MongoDB Atlas
+
+```bash
+# Using MongoDB Atlas
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/nexom?retryWrites=true&w=majority
+```
+
+## 🏃 Running the Application
+
+### Development Mode
+
+```bash
+# Terminal 1 - Auth Service
+cd server/auth-service
+npm run dev
+
+# Terminal 2 - Service Catalog
+cd server/service-catalog
+npm run dev
+```
+
+### Production Build
+
+```bash
+# Build all services
+cd server/auth-service
+npm run build
+npm start
+
+cd server/service-catalog
+npm run build
+npm start
+```
 
 ## 📡 API Endpoints
 
 ### Auth Service (Port 8081)
- 
- | Method | Endpoint | Description |
- |--------|----------|-------------|
- | POST | `/api/v1/auth/send-otp` | Send OTP (Register/Login) |
- | POST | `/api/v1/auth/verify-otp` | Verify OTP & Get Token |
- | POST | `/api/v1/auth/resend-otp` | Resend OTP |
- 
- ### Service Catalog (Port 8082)
- 
- | Method | Endpoint | Description | Auth Required |
- |--------|----------|-------------|---------------|
- | GET | `/api/v1/services` | Get all services | ✅ |
- | GET | `/api/v1/services/:id` | Get service by ID | ✅ |
- | POST | `/api/v1/services` | Create new service | ✅ |
- | PATCH | `/api/v1/services/:id` | Update service | ✅ |
- | DELETE | `/api/v1/services/:id` | Delete service | ✅ |
- | GET | `/api/v1/categories` | Get all categories | ✅ |
- | POST | `/api/v1/categories` | Create category | ✅ |
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/auth/send-otp` | Send OTP to user's email |
+| POST | `/api/v1/auth/verify-otp` | Verify email OTP |
+| POST | `/api/v1/auth/resend-otp` | Resend OTP |
+
+### Service Catalog (Port 8082)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/v1/services` | Get all services | ✅ |
+| GET | `/api/v1/services/:id` | Get service by ID | ✅ |
+| POST | `/api/v1/services` | Create new service | ✅ |
+| DELETE | `/api/v1/services/:id` | Delete service | ✅ |
 
 ## 🧪 Testing
 
 ### Example API Calls
 
-**Send OTP (Login/Register)**:
- ```bash
- curl -X POST http://localhost:8081/api/v1/auth/send-otp \
-   -H "Content-Type: application/json" \
-   -d '{
-     "email": "john@example.com"
-   }'
- ```
- 
- **Verify OTP**:
- ```bash
- curl -X POST http://localhost:8081/api/v1/auth/verify-otp \
-   -H "Content-Type: application/json" \
-   -d '{
-     "email": "john@example.com",
-     "otp": "123456"
-   }'
- ```
- 
- **Create Service** (requires JWT token):
- ```bash
- curl -X POST http://localhost:8082/api/v1/services \
-   -H "Content-Type: application/json" \
-   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-   -d '{
-     "name": "Web Development",
-     "description": "Professional web development services",
-     "price": 999.99,
-     "specifications": {
-         "numberOfRooms": 3,
-         "areaSize": 1200
-     }
-   }'
- ```
+**Send OTP**:
+```bash
+curl -X POST http://localhost:8081/api/v1/auth/send-otp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john@example.com"
+  }'
+```
+
+**Verify OTP**:
+```bash
+curl -X POST http://localhost:8081/api/v1/auth/verify-otp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john@example.com",
+    "otp": 123456
+  }'
+```
+
+**Resend OTP**:
+```bash
+curl -X POST http://localhost:8081/api/v1/auth/resend-otp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john@example.com"
+  }'
+```
+
+**Create Service** (requires JWT token):
+```bash
+curl -X POST http://localhost:8082/api/v1/services \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "title": "Web Development",
+    "description": "Full-stack web development service",
+    "price": 1500,
+    "duration": 120,
+    "category": "Development",
+    "imageUrl": "https://example.com/image.jpg"
+}'
+```
 
 ## 🤝 Contributing
 
