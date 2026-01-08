@@ -1,9 +1,9 @@
+import { ROUTES } from '@/constants';
+import { authService, useAuth } from '@/features/auth';
 import { motion } from 'framer-motion';
 import { ArrowRight, KeyRound, Mail, Sparkles } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { authService } from '../services/authService';
 
 const Login: React.FC = () => {
     const [step, setStep] = useState<'email' | 'otp'>('email');
@@ -37,7 +37,7 @@ const Login: React.FC = () => {
             const data = await authService.verifyOtp(email, otp);
             if (data.token) {
                 login(data.token);
-                navigate('/');
+                navigate(ROUTES.HOME);
             }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Invalid OTP. Please try again.');

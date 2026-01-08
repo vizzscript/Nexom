@@ -1,18 +1,20 @@
+import { ROUTES } from '@/constants';
+import { useServicesData } from '@/hooks';
+import type { FrontendCategory } from '@/types';
 import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Sparkles, Twitter } from 'lucide-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useServicesData, type FrontendCategory } from '../services/useServicesData';
 
 const Footer: React.FC = () => {
     // We only need categories to list the links
     const { categories } = useServicesData();
 
     const footLinks = [
-        { name: 'Home', path: '/' },
-        { name: 'About', path: '/about' },
-        { name: 'Services', path: '/services' },
-        { name: 'Pricing', path: '/' },
-        { name: 'Contact', path: '/contact' }
+        { name: 'Home', path: ROUTES.HOME },
+        { name: 'About', path: ROUTES.ABOUT },
+        { name: 'Services', path: ROUTES.SERVICES },
+        { name: 'Pricing', path: ROUTES.HOME },
+        { name: 'Contact', path: ROUTES.CONTACT }
     ];
 
     return (
@@ -21,7 +23,7 @@ const Footer: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
                     {/* Brand Info */}
                     <div>
-                        <Link to="/" className="flex items-center gap-2 mb-6">
+                        <Link to={ROUTES.HOME} className="flex items-center gap-2 mb-6">
                             <div className="bg-white/10 p-2 rounded-lg">
                                 <Sparkles className="w-6 h-6 text-[#d4af37]" />
                             </div>
@@ -61,7 +63,7 @@ const Footer: React.FC = () => {
                             {categories.map((item: FrontendCategory) => (
                                 <li key={item.id}>
                                     <Link
-                                        to="/services"
+                                        to={ROUTES.SERVICES}
                                         // This passes the category name to the Services page
                                         state={{ selectedCategory: item.name }}
                                         className="hover:text-[#d4af37] transition-colors"

@@ -1,37 +1,33 @@
+import { ROUTES } from '@/constants';
+import { useAuth } from '@/features/auth';
+import { useServicesData } from '@/hooks';
+import { formatCurrency } from '@/utils';
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, Clock, Leaf, Shield, Star } from 'lucide-react';
 import React, { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useServicesData } from '../services/useServicesData'; // Import the new hook
 
-// Assuming the hook returns this structure, based on usage in the JSX
+// Define the structure needed for display in the Home component
 interface HomeServicePreview {
     id: string;
     title: string;
     price: number;
     description: string;
     image: string;
-    features: string[]; // List of features for the bullets
-    isFeatured?: boolean; // Optional flag for homepage display
+    features: string[];
+    isFeatured?: boolean;
 }
 
 const Home: React.FC = () => {
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
-    // Note: TypeScript will require useServicesData to return HomeServicePreview[]
-    const { services, loading } = useServicesData() as { services: HomeServicePreview[], loading: boolean };
+    const { services, loading } = useServicesData() as unknown as { services: HomeServicePreview[], loading: boolean };
 
-    // Select services for the homepage preview (e.g., top 3 or featured)
     const previewServices = useMemo(() => {
         if (!services || services.length === 0) return [];
 
-        // If the FrontendService interface includes 'isFeatured' from the hook:
         const featured = services.filter(service => service.isFeatured).slice(0, 3);
-
-        // Fallback: use the first 3 services if no features are explicitly marked
         return featured.length > 0 ? featured : services.slice(0, 3);
-
     }, [services]);
 
     return (
@@ -76,11 +72,11 @@ const Home: React.FC = () => {
                             </p>
                             <div className="flex flex-wrap gap-4">
                                 <Link
-                                    to="/book"
+                                    to={ROUTES.BOOK}
                                     onClick={(e) => {
                                         if (!isAuthenticated) {
                                             e.preventDefault();
-                                            navigate('/login');
+                                            navigate(ROUTES.LOGIN);
                                         }
                                     }}
                                     className="btn btn-primary text-lg px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all"
@@ -88,7 +84,7 @@ const Home: React.FC = () => {
                                     Book a Service
                                     <ArrowRight className="w-5 h-5" />
                                 </Link>
-                                <Link to="/services" className="btn btn-outline text-lg px-8 py-4 rounded-full">
+                                <Link to={ROUTES.SERVICES} className="btn btn-outline text-lg px-8 py-4 rounded-full">
                                     View Services
                                 </Link>
                             </div>
@@ -236,7 +232,7 @@ const Home: React.FC = () => {
                                 From deep cleaning to regular maintenance, we offer a comprehensive range of services.
                             </p>
                         </div>
-                        <Link to="/services" className="hidden md:flex items-center gap-2 text-[#d4af37] font-medium hover:gap-4 transition-all">
+                        <Link to={ROUTES.SERVICES} className="hidden md:flex items-center gap-2 text-[#d4af37] font-medium hover:gap-4 transition-all">
                             View All Services <ArrowRight className="w-4 h-4" />
                         </Link>
                     </div>
@@ -270,7 +266,7 @@ const Home: React.FC = () => {
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
                                         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-1 rounded-full text-sm font-bold text-slate-900">
-                                            {`From ₹${service.price}`}
+                                            {`From ${formatCurrency(service.price)}`}
                                         </div>
                                     </div>
 
@@ -292,11 +288,11 @@ const Home: React.FC = () => {
 
                                         {/* >>> UPDATED: Link to /book with serviceId query parameter <<< */}
                                         <Link
-                                            to={`/book?serviceId=${service.id}`}
+                                            to={`${ROUTES.BOOK}?serviceId=${service.id}`}
                                             onClick={(e) => {
                                                 if (!isAuthenticated) {
                                                     e.preventDefault();
-                                                    navigate('/login');
+                                                    navigate(ROUTES.LOGIN);
                                                 }
                                             }}
                                             className="w-full btn btn-outline group-hover:bg-[#d4af37] group-hover:text-white group-hover:border-[#d4af37] flex items-center justify-center mt-auto"

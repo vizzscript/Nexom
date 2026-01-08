@@ -1,8 +1,7 @@
-
+import { contactService } from '@/features/contact';
 import { motion } from 'framer-motion';
 import { Mail, MapPin, Phone, Send } from 'lucide-react';
 import React from 'react';
-import { contactService } from '../services/contactService';
 
 const Contact: React.FC = () => {
     const [formData, setFormData] = React.useState({
@@ -26,7 +25,7 @@ const Contact: React.FC = () => {
         setSubmitStatus('idle');
 
         try {
-            await contactService.submitForm(formData);
+            await contactService.submitContactForm(formData);
             setSubmitStatus('success');
             setFormData({
                 firstName: '',
