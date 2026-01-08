@@ -270,7 +270,7 @@ const Home: React.FC = () => {
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
                                         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-1 rounded-full text-sm font-bold text-slate-900">
-                                            {`From $${service.price}`}
+                                            {`From ₹${service.price}`}
                                         </div>
                                     </div>
 
