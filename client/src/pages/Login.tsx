@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, KeyRound, Mail, Sparkles } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 
 const Login: React.FC = () => {
@@ -11,6 +12,8 @@ const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+
+    const { login } = useAuth();
 
     const handleEmailSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -31,8 +34,11 @@ const Login: React.FC = () => {
         setLoading(true);
         setError('');
         try {
-            await authService.verifyOtp(email, otp);
-            navigate('/');
+            const data = await authService.verifyOtp(email, otp);
+            if (data.token) {
+                login(data.token);
+                navigate('/');
+            }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
         } finally {

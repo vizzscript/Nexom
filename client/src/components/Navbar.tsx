@@ -1,9 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, Sparkles, X } from 'lucide-react';
+import { Menu, Sparkles, User, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar: React.FC = () => {
+    const { isAuthenticated } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const location = useLocation();
@@ -26,8 +28,8 @@ const Navbar: React.FC = () => {
     return (
         <nav
             className={`fixed w-full z-50 transition-all duration-300 ${scrolled
-                    ? 'bg-white/90 backdrop-blur-md shadow-sm py-4'
-                    : 'bg-transparent py-6'
+                ? 'bg-white/90 backdrop-blur-md shadow-sm py-4'
+                : 'bg-transparent py-6'
                 }`}
         >
             <div className="container mx-auto flex justify-between items-center">
@@ -48,19 +50,28 @@ const Navbar: React.FC = () => {
                             key={link.name}
                             to={link.path}
                             className={`text-sm font-medium transition-colors hover:text-[#d4af37] ${location.pathname === link.path
-                                    ? 'text-[#d4af37]'
-                                    : 'text-slate-600'
+                                ? 'text-[#d4af37]'
+                                : 'text-slate-600'
                                 }`}
                         >
                             {link.name}
                         </Link>
                     ))}
-                    <Link
-                        to="/login"
-                        className="btn btn-primary text-sm px-6 py-2.5 rounded-full"
-                    >
-                        Login
-                    </Link>
+                    {isAuthenticated ? (
+                        <Link
+                            to="/dashboard"
+                            className="flex items-center gap-2 text-slate-600 hover:text-[#d4af37] transition-colors"
+                        >
+                            <User className="w-6 h-6" />
+                        </Link>
+                    ) : (
+                        <Link
+                            to="/login"
+                            className="btn btn-primary text-sm px-6 py-2.5 rounded-full"
+                        >
+                            Login
+                        </Link>
+                    )}
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -92,13 +103,24 @@ const Navbar: React.FC = () => {
                                     {link.name}
                                 </Link>
                             ))}
-                            <Link
-                                to="/login"
-                                className="btn btn-primary w-full justify-center"
-                                onClick={() => setIsOpen(false)}
-                            >
-                                Login
-                            </Link>
+                            {isAuthenticated ? (
+                                <Link
+                                    to="/dashboard"
+                                    className="btn btn-primary w-full justify-center flex items-center gap-2"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <User className="w-4 h-4" />
+                                    Dashboard
+                                </Link>
+                            ) : (
+                                <Link
+                                    to="/login"
+                                    className="btn btn-primary w-full justify-center"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Login
+                                </Link>
+                            )}
                         </div>
                     </motion.div>
                 )}

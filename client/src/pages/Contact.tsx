@@ -1,12 +1,61 @@
+
 import { motion } from 'framer-motion';
 import { Mail, MapPin, Phone, Send } from 'lucide-react';
 import React from 'react';
+import { contactService } from '../services/contactService';
 
 const Contact: React.FC = () => {
+    const [formData, setFormData] = React.useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        subject: 'General Inquiry',
+        message: ''
+    });
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [submitStatus, setSubmitStatus] = React.useState<'idle' | 'success' | 'error'>('idle');
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        setSubmitStatus('idle');
+
+        try {
+            await contactService.submitForm(formData);
+            setSubmitStatus('success');
+            setFormData({
+                firstName: '',
+                lastName: '',
+                email: '',
+                phone: '',
+                subject: 'General Inquiry',
+                message: ''
+            });
+        } catch (error) {
+            console.error(error);
+            setSubmitStatus('error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleChat = () => {
+        // Open WhatsApp or similar chat service
+        const whatsappLink = import.meta.env.VITE_WHATSAPP_LINK;
+        if (whatsappLink) {
+            window.open(whatsappLink, '_blank');
+        }
+    };
+
     return (
         <div className="pt-20 min-h-screen bg-slate-50">
             {/* Header */}
-            <section className="bg-slate-900 text-white py-20">
+            <section className="bg-slate-900 text-white py-20 mb-20">
                 <div className="container mx-auto text-center">
                     <h1 className="text-4xl md:text-5xl font-bold font-serif mb-6 text-white">Get in Touch</h1>
                     <p className="text-slate-400 max-w-2xl mx-auto text-lg">
@@ -15,10 +64,10 @@ const Contact: React.FC = () => {
                 </div>
             </section>
 
-            <section className="py-20 container mx-auto px-4">
+            <section className="py-20 container mx-auto px-4 mb-20">
                 <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                     {/* Contact Info */}
-                    <div className="lg:col-span-1 space-y-6">
+                    <div className="lg:col-span-1 space-y-6 mb-20">
                         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
                             <h3 className="text-xl font-bold font-serif mb-6 text-slate-900">Contact Information</h3>
                             <div className="space-y-6">
@@ -28,7 +77,7 @@ const Contact: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm text-slate-500 mb-1">Call Us</p>
-                                        <p className="font-medium text-slate-900">+1 (555) 123-4567</p>
+                                        <p className="font-medium text-slate-900">+91 9503904221</p>
                                         <p className="text-sm text-slate-400">Mon-Fri, 9am - 6pm</p>
                                     </div>
                                 </div>
@@ -39,7 +88,7 @@ const Contact: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm text-slate-500 mb-1">Email Us</p>
-                                        <p className="font-medium text-slate-900">concierge@nexom.com</p>
+                                        <p className="font-medium text-slate-900">script.vizz@gmail.com</p>
                                         <p className="text-sm text-slate-400">24/7 Support</p>
                                     </div>
                                 </div>
@@ -50,8 +99,8 @@ const Contact: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm text-slate-500 mb-1">Visit Us</p>
-                                        <p className="font-medium text-slate-900">123 Premium Boulevard</p>
-                                        <p className="text-sm text-slate-400">Beverly Hills, CA 90210</p>
+                                        <p className="font-medium text-slate-900">Nagpur, Maharastra 440001</p>
+                                        <p className="text-sm text-slate-400">India</p>
                                     </div>
                                 </div>
                             </div>
@@ -62,7 +111,10 @@ const Contact: React.FC = () => {
                             <p className="mb-6 opacity-90">
                                 Our support team is available 24/7 to assist you with any urgent cleaning needs.
                             </p>
-                            <button className="w-full bg-white text-[#d4af37] font-bold py-3 rounded-lg hover:bg-slate-50 transition-colors">
+                            <button
+                                onClick={handleChat}
+                                className="w-full bg-white text-[#d4af37] font-bold py-3 rounded-lg hover:bg-slate-50 transition-colors"
+                            >
                                 Chat with Support
                             </button>
                         </div>
@@ -76,12 +128,23 @@ const Contact: React.FC = () => {
                             className="bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-slate-100"
                         >
                             <h3 className="text-2xl font-bold font-serif mb-6 text-slate-900">Send us a Message</h3>
-                            <form className="space-y-6">
+
+                            {submitStatus === 'success' && (
+                                <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-lg border border-green-200">
+                                    Thank you! Your message has been sent successfully. We'll get back to you shortly.
+                                </div>
+                            )}
+
+                            <form onSubmit={handleSendMessage} className="space-y-6">
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-2">First Name</label>
                                         <input
                                             type="text"
+                                            name="firstName"
+                                            value={formData.firstName}
+                                            onChange={handleChange}
+                                            required
                                             className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all"
                                             placeholder="John"
                                         />
@@ -90,6 +153,10 @@ const Contact: React.FC = () => {
                                         <label className="block text-sm font-medium text-slate-700 mb-2">Last Name</label>
                                         <input
                                             type="text"
+                                            name="lastName"
+                                            value={formData.lastName}
+                                            onChange={handleChange}
+                                            required
                                             className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all"
                                             placeholder="Doe"
                                         />
@@ -101,6 +168,10 @@ const Contact: React.FC = () => {
                                         <label className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
                                         <input
                                             type="email"
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            required
                                             className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all"
                                             placeholder="john@example.com"
                                         />
@@ -109,6 +180,9 @@ const Contact: React.FC = () => {
                                         <label className="block text-sm font-medium text-slate-700 mb-2">Phone Number</label>
                                         <input
                                             type="tel"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleChange}
                                             className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all"
                                             placeholder="+1 (555) 000-0000"
                                         />
@@ -117,7 +191,12 @@ const Contact: React.FC = () => {
 
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-2">Subject</label>
-                                    <select className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all bg-white">
+                                    <select
+                                        name="subject"
+                                        value={formData.subject}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all bg-white"
+                                    >
                                         <option>General Inquiry</option>
                                         <option>Service Booking</option>
                                         <option>Feedback</option>
@@ -128,6 +207,10 @@ const Contact: React.FC = () => {
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-2">Message</label>
                                     <textarea
+                                        name="message"
+                                        value={formData.message}
+                                        onChange={handleChange}
+                                        required
                                         rows={4}
                                         className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all resize-none"
                                         placeholder="How can we help you?"
@@ -136,10 +219,11 @@ const Contact: React.FC = () => {
 
                                 <button
                                     type="submit"
-                                    className="btn btn-primary w-full md:w-auto px-8 py-3 rounded-lg flex items-center justify-center gap-2"
+                                    disabled={isSubmitting}
+                                    className="btn btn-primary w-full md:w-auto px-8 py-3 rounded-lg flex items-center justify-center gap-2 disabled:opacity-70"
                                 >
-                                    Send Message
-                                    <Send className="w-4 h-4" />
+                                    {isSubmitting ? 'Sending...' : 'Send Message'}
+                                    {!isSubmitting && <Send className="w-4 h-4" />}
                                 </button>
                             </form>
                         </motion.div>
