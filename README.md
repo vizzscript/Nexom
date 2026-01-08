@@ -1,13 +1,21 @@
 # Nexom
 
-A modern microservices-based platform built with Node.js, TypeScript, and MongoDB.
+A modern microservices-based Home cleaing platform built with Node.js, TypeScript, and MongoDB.
 
 ## 🏗️ Architecture
-
-Nexom follows a microservices architecture with the following services:
-
+ 
+Nexom follows a microservices architecture with a React frontend:
+ 
 ```
 ┌─────────────────────────────────────────────────────┐
+│                 Client Application                  │
+│               (React + Vite + TS)                   │
+│                   Port: 5173                        │
+└──────────────────────────┬──────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────┐
+│                    API Gateway                      │
+│                   (Future)                          │
 │                    API Gateway                      │
 │                     (Future)                        │
 └─────────────────────────────────────────────────────┘
@@ -18,9 +26,9 @@ Nexom follows a microservices architecture with the following services:
 │  Auth Service  │              │ Service Catalog    │
 │   Port: 8081   │              │   Port: 8082       │
 │                │              │                    │
-│ - JWT Auth     │              │ - Service CRUD     │
-│ - Email OTP    │              │ - Search           │
-│ - User Mgmt    │              │ - Categories       │
+│ - JWT Auth     │              │ - Home Cleaning    │
+│ - Email OTP    │              │ - Services List    │
+│ - User Mgmt    │              │ - Adv. Search      │
 └────────────────┘              └────────────────────┘
         │                                  │
         └────────────────┬─────────────────┘
@@ -33,19 +41,23 @@ Nexom follows a microservices architecture with the following services:
 
 ## 🚀 Services
 
+### Client Application
+Modern frontend interface built with React and Vite:
+- Premium UI with circular animations
+- Responsive design with TailwindCSS
+- Integrated authentication flows
+- Service browsing and filtering
+
 ### Auth Service
 Handles authentication and user management:
-- User registration and login
+- User Email OTP based login
 - Email-based OTP verification
 - JWT token generation and validation
-- Password management
 
 ### Service Catalog
-Manages service listings:
-- CRUD operations for services
-- Service search and filtering
-- Category management
-- JWT-protected endpoints
+Specialized Home Cleaning Service platform:
+- Service type categorization
+- Advanced filtering (rooms, area, price)
 
 ### Common Modules
 Shared functionality across services:
@@ -231,64 +243,83 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deta
 - Code review guidelines
 
 ## 📝 Project Structure
-
-```
-Nexom/
-├── server/
-│   ├── auth-service/
-│   │   ├── src/
-│   │   │   ├── config/          # Configuration
-│   │   │   ├── controllers/     # Route controllers
-│   │   │   ├── database/        # Database models
-│   │   │   ├── middleware/      # Express middleware
-│   │   │   ├── routes/          # API routes
-│   │   │   ├── services/        # Business logic
-│   │   │   ├── utils/           # Utilities
-│   │   │   └── server.ts        # Entry point
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   │
-│   ├── service-catalog/
-│   │   ├── src/
-│   │   │   ├── config/
-│   │   │   ├── controllers/
-│   │   │   ├── middleware/
-│   │   │   ├── models/
-│   │   │   ├── routes/
-│   │   │   ├── utils/
-│   │   │   └── server.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   │
-│   └── common/
-│       └── db/
-│           └── connection.ts    # Shared DB connection
-│
-├── .gitignore
-├── .gitattributes
-├── .gitmessage
-├── CONTRIBUTING.md
-└── README.md
-```
-
-## 🔧 Technology Stack
-
-- **Runtime**: Node.js
-- **Language**: TypeScript
-- **Framework**: Express.js
-- **Database**: MongoDB with Mongoose
-- **Authentication**: JWT (JSON Web Tokens)
-- **Email**: Nodemailer
-- **Validation**: Express Validator
+ 
+ ```
+ Nexom/
+ ├── client/                  # Frontend Application
+ │   ├── src/
+ │   │   ├── components/      # Reusable UI components
+ │   │   ├── pages/           # Page components
+ │   │   ├── assets/          # Static assets
+ │   │   ├── App.tsx          # Main App component
+ │   │   └── main.tsx         # Entry point
+ │   ├── public/
+ │   ├── index.html
+ │   └── vite.config.ts
+ │
+ ├── server/                  # Backend Microservices
+ │   ├── auth-service/
+ │   │   ├── src/
+ │   │   │   ├── config/          # Configuration
+ │   │   │   ├── controllers/     # Route controllers
+ │   │   │   ├── database/        # Database models
+ │   │   │   ├── middleware/      # Express middleware
+ │   │   │   ├── routes/          # API routes
+ │   │   │   ├── services/        # Business logic
+ │   │   │   ├── utils/           # Utilities
+ │   │   │   └── server.ts        # Entry point
+ │   │   ├── package.json
+ │   │   └── tsconfig.json
+ │   │
+ │   ├── service-catalog/
+ │   │   ├── src/
+ │   │   │   ├── config/
+ │   │   │   ├── controllers/
+ │   │   │   ├── middleware/
+ │   │   │   ├── models/
+ │   │   │   ├── routes/
+ │   │   │   ├── utils/
+ │   │   │   └── server.ts
+ │   │   ├── package.json
+ │   │   └── tsconfig.json
+ │   │
+ │   └── common/
+ │       └── db/
+ │           └── connection.ts    # Shared DB connection
+ │
+ ├── .gitignore
+ ├── .gitattributes
+ ├── .gitmessage
+ ├── CONTRIBUTING.md
+ └── README.md
+ ```
+ 
+ ## 🔧 Technology Stack
+ 
+ ### Frontend
+ - **Framework**: React 18 with Vite
+ - **Language**: TypeScript
+ - **Styling**: TailwindCSS
+ - **State**: React Hooks
+ - **Icons**: Lucide React
+ 
+ ### Backend
+ - **Runtime**: Node.js
+ - **Language**: TypeScript
+ - **Framework**: Express.js
+ - **Database**: MongoDB with Mongoose
+ - **Authentication**: JWT (JSON Web Tokens)
+ - **Email**: Nodemailer
+ - **Validation**: Express Validator
 
 ## 📚 Documentation
 
 - [Contributing Guidelines](CONTRIBUTING.md)
-- [Development Challenges](server/DEVELOPMENT_CHALLENGES.md)
+- [Development Challenges](DEVELOPMENT_CHALLENGES.md)
 
 ## 🐛 Known Issues
 
-See [DEVELOPMENT_CHALLENGES.md](server/DEVELOPMENT_CHALLENGES.md) for known issues and their solutions.
+See [DEVELOPMENT_CHALLENGES.md](DEVELOPMENT_CHALLENGES.md) for known issues and their solutions.
 
 ## 📄 License
 

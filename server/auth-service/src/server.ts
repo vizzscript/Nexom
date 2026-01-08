@@ -7,8 +7,17 @@ import { errorConverter, errorHandler } from "./middleware";
 import userRouter from "./routes/authRoutes";
 import { rabbitMQService } from "./services/RabbitMQService";
 
+import cors from "cors";
+
 const app: Express = express();
 let server: Server;
+
+const nexomUrl = process.env.NEXOM_FRONTEND_URL;
+
+app.use(cors({
+    origin: nexomUrl,
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/v1/auth", userRouter);
