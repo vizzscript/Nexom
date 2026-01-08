@@ -1,7 +1,9 @@
+import { ROUTES } from '@/constants';
+import { useAuth } from '@/features/auth';
+import { formatCurrency } from '@/utils';
 import { Calendar, Clock, LogOut, MapPin } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 
 const Dashboard: React.FC = () => {
     const { logout, isAuthenticated } = useAuth();
@@ -10,7 +12,7 @@ const Dashboard: React.FC = () => {
 
     useEffect(() => {
         if (!isAuthenticated) {
-            navigate('/login');
+            navigate(ROUTES.LOGIN);
         }
         const storedBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
         setBookings(storedBookings.reverse()); // Show newest first
@@ -18,7 +20,7 @@ const Dashboard: React.FC = () => {
 
     const handleLogout = () => {
         logout();
-        navigate('/');
+        navigate(ROUTES.HOME);
     };
 
     return (
@@ -36,7 +38,7 @@ const Dashboard: React.FC = () => {
                     {bookings.length === 0 ? (
                         <div className="text-center py-12">
                             <p className="text-slate-500 mb-4">You haven't booked any services yet.</p>
-                            <button onClick={() => navigate('/services')} className="btn btn-primary px-6 py-2 rounded-full">
+                            <button onClick={() => navigate(ROUTES.SERVICES)} className="btn btn-primary px-6 py-2 rounded-full">
                                 Browse Services
                             </button>
                         </div>
@@ -65,7 +67,7 @@ const Dashboard: React.FC = () => {
                                         <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">
                                             {booking.status}
                                         </span>
-                                        <span className="font-bold text-slate-900 text-lg">${booking.service?.price}</span>
+                                        <span className="font-bold text-slate-900 text-lg">{formatCurrency(booking.service?.price)}</span>
                                     </div>
                                 </div>
                             ))}
