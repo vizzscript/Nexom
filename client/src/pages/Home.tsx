@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, Clock, Leaf, Shield, Star } from 'lucide-react';
 import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useServicesData } from '../services/useServicesData'; // Import the new hook
 
 // Assuming the hook returns this structure, based on usage in the JSX
@@ -16,6 +17,8 @@ interface HomeServicePreview {
 }
 
 const Home: React.FC = () => {
+    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
     // Note: TypeScript will require useServicesData to return HomeServicePreview[]
     const { services, loading } = useServicesData() as { services: HomeServicePreview[], loading: boolean };
 
@@ -72,7 +75,16 @@ const Home: React.FC = () => {
                                 for a home that truly shines.
                             </p>
                             <div className="flex flex-wrap gap-4">
-                                <Link to="/book" className="btn btn-primary text-lg px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all">
+                                <Link
+                                    to="/book"
+                                    onClick={(e) => {
+                                        if (!isAuthenticated) {
+                                            e.preventDefault();
+                                            navigate('/login');
+                                        }
+                                    }}
+                                    className="btn btn-primary text-lg px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all"
+                                >
                                     Book a Service
                                     <ArrowRight className="w-5 h-5" />
                                 </Link>
@@ -281,6 +293,12 @@ const Home: React.FC = () => {
                                         {/* >>> UPDATED: Link to /book with serviceId query parameter <<< */}
                                         <Link
                                             to={`/book?serviceId=${service.id}`}
+                                            onClick={(e) => {
+                                                if (!isAuthenticated) {
+                                                    e.preventDefault();
+                                                    navigate('/login');
+                                                }
+                                            }}
                                             className="w-full btn btn-outline group-hover:bg-[#d4af37] group-hover:text-white group-hover:border-[#d4af37] flex items-center justify-center mt-auto"
                                         >
                                             Book Now

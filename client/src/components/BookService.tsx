@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 // Ensure all necessary icons and types are imported
 import { ArrowLeft, ArrowRight, Calendar, Check, CheckCircle, Clock, Home, MapPin, Shield, Star, User, type LucideIcon } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useServicesData } from '../services/useServicesData'; // Import the dynamic data hook
 
 // ====================================================================
@@ -90,6 +90,7 @@ const augmentServices = (services: FetchedService[]): AugmentedService[] => {
 // ====================================================================
 
 const BookService: React.FC = () => {
+    const navigate = useNavigate();
     // 0. Get URL query parameters
     const query = useQuery();
     const initialServiceId = query.get('serviceId');
@@ -131,7 +132,24 @@ const BookService: React.FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [augmentedServices, initialServiceId]); // Run when data loads or initial ID changes
 
-    const handleNext = () => setStep((prev) => Math.min(prev + 1, 3));
+    const handleNext = () => {
+        if (step === 3) {
+            // Save booking to localStorage
+            const booking = {
+                id: Date.now(),
+                service: selectedService,
+                date: formData.date,
+                time: formData.time,
+                details: formData.details,
+                status: 'Confirmed'
+            };
+            const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            localStorage.setItem('bookings', JSON.stringify([...existingBookings, booking]));
+            navigate('/dashboard');
+        } else {
+            setStep((prev) => Math.min(prev + 1, 3));
+        }
+    };
     const handleBack = () => setStep((prev) => Math.max(prev - 1, 1));
 
     const updateDetails = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
