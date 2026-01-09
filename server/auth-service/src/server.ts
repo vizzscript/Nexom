@@ -31,7 +31,8 @@ const startServer = async () => {
 
         // Start HTTP server after database is connected
         server = app.listen(config.AUTH_PORT, () => {
-            console.log(`Server is running on PORT ${config.AUTH_PORT}`);
+            console.log(`Auth Service is running on PORT ${config.AUTH_PORT}`);
+            console.log(`Connected to Frontend: ${nexomUrl}`);
         });
 
         // Initialize RabbitMQ client (non-blocking if it fails)

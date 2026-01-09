@@ -24,6 +24,6 @@ app.get("/health", (req, res) => {
 // Start server
 const PORT = config.PORT || 8083;
 app.listen(PORT, () => {
-    console.log(`Contact Service running on port ${PORT}`);
-    console.log(`Environment: ${config.env}`);
+    console.log(`Contact Service is running on port ${PORT}`);
+    console.log(`Mode: ${config.env || 'development'}`);
 });

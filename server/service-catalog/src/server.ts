@@ -29,7 +29,8 @@ const startServer = async () => {
 
         // Start HTTP server after database is connected
         app.listen(config.SERVICE_PORT, () => {
-            console.log(`Service Catalog running on PORT: ${config.SERVICE_PORT}`);
+            console.log(`Service Catalog is running on PORT: ${config.SERVICE_PORT}`);
+            console.log(`Database connected successfully`);
         });
     } catch (err) {
         console.error("Failed to start service-catalog:", err);

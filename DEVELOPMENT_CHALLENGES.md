@@ -721,4 +721,28 @@ const augmentServices = (services) => {
 
 ---
 
-*Last Updated: January 8, 2026*
+---
+
+## 11. Concurrent Service Execution
+
+### Challenge
+Managing multiple terminal windows to start each microservice individually was cumbersome and slowed down the development workflow.
+
+### Solution
+Implemented a root `package.json` in the `server` directory using `concurrently` to manage all services with a single command.
+
+**Implementation**:
+```json
+"scripts": {
+  "dev": "concurrently \"npm run dev --prefix auth-service\" \"npm run dev --prefix service-catalog\" \"npm run dev --prefix payment-service\" \"npm run dev --prefix contact-service\""
+}
+```
+
+### Lessons Learned
+- Centralizing service management improves developer experience.
+- Using `--prefix` with npm allows running scripts in subdirectories without changing the working directory.
+- `concurrently` provides a unified log output with prefixing for each service, making debugging easier.
+
+---
+
+*Last Updated: January 9, 2026*
