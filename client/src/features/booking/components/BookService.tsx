@@ -1,86 +1,27 @@
+import { ROUTES, TIME_SLOTS } from '@/constants';
+import { useQuery, useServicesData } from '@/hooks';
+import type { AugmentedService, BookingData, FrontendService } from '@/types';
+import { formatCurrency } from '@/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-// Ensure all necessary icons and types are imported
-import { ArrowLeft, ArrowRight, Calendar, Check, CheckCircle, Clock, Home, MapPin, Shield, Star, User, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Check, CheckCircle, Clock, Home, MapPin, Shield, Star, User } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useServicesData } from '../services/useServicesData'; // Import the dynamic data hook
-
-// ====================================================================
-// INTERFACES (Assuming these are the fields returned by your hook)
-// ====================================================================
-
-// Define the shape of the raw service data returned by useServicesData
-interface FetchedService {
-    id: string;
-    title: string;
-    price: number;
-    description: string;
-    // Assume other fields like category, features, etc., are also present
-}
-
-// Define the structure needed for display in the BookService component
-interface AugmentedService extends FetchedService {
-    duration: string;
-    icon: LucideIcon; // Type imported from 'lucide-react'
-}
-
-// Types for form data
-interface BookingData {
-    serviceId: string | null;
-    date: string | null;
-    time: string | null;
-    details: {
-        name: string;
-        email: string;
-        address: string;
-        notes: string;
-    };
-}
+import { useNavigate } from 'react-router-dom';
 
 // ====================================================================
 // HELPER LOGIC FOR AUGMENTATION
 // ====================================================================
 
-// Helper function to parse query parameters
-const useQuery = () => {
-    const { search } = useLocation();
-    return useMemo(() => new URLSearchParams(search), [search]);
-};
-
-// TODO: In future will make this dynamic
-const timeSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
-
-const augmentServices = (services: FetchedService[]): AugmentedService[] => {
+const augmentServices = (services: FrontendService[]): AugmentedService[] => {
     if (!services || services.length === 0) return [];
 
-    return services.map(service => {
-        let iconComponent: LucideIcon = Home; // Default icon
-        let durationString: string = '2-3 Hours'; // Default duration
-
-        // Logic to assign icon and duration based on service title
-        const titleLower = service.title.toLowerCase();
-
-        if (titleLower.includes('deep')) {
-            iconComponent = Star;
-            durationString = '4-5 Hours';
-        } else if (titleLower.includes('maintenance') || titleLower.includes('regular')) {
-            iconComponent = Clock;
-            durationString = '2-3 Hours';
-        } else if (titleLower.includes('move-in') || titleLower.includes('move-out')) {
-            iconComponent = MapPin;
-            durationString = '6+ Hours';
-        } else if (titleLower.includes('renovation') || titleLower.includes('post-reno')) {
-            iconComponent = Shield;
-            durationString = '8+ Hours';
-        } else if (titleLower.includes('office')) {
-            iconComponent = Check;
-            durationString = '3-4 Hours';
-        }
+    return services.map((service, index) => {
+        const icons = [Home, Shield, Star, Clock];
+        const durations = ['2-3 Hours', '4-5 Hours', '6-8 Hours', '3-4 Hours'];
 
         return {
             ...service,
-            icon: iconComponent,
-            duration: durationString,
+            icon: icons[index % icons.length],
+            duration: durations[index % durations.length],
         } as AugmentedService;
     });
 };
@@ -91,61 +32,75 @@ const augmentServices = (services: FetchedService[]): AugmentedService[] => {
 
 const BookService: React.FC = () => {
     const navigate = useNavigate();
-    // 0. Get URL query parameters
     const query = useQuery();
     const initialServiceId = query.get('serviceId');
+    const editId = query.get('editId');
 
-    // 1. Fetch data dynamically
     const { services, loading } = useServicesData();
 
-    // 2. Augment data using useMemo for performance
-    const augmentedServices = useMemo(() => augmentServices(services as FetchedService[]), [services]);
+    const augmentedServices = useMemo(() => augmentServices(services), [services]);
 
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState<BookingData>({
-        // Initialize with serviceId from URL if present
         serviceId: initialServiceId || null,
         date: null,
         time: null,
         details: { name: '', email: '', address: '', notes: '' }
     });
 
-    // Effect to handle initial service selection and step advance
     useEffect(() => {
-        // Only run if data is loaded and we have an initial ID to process
-        if (augmentedServices.length > 0 && initialServiceId && formData.serviceId === initialServiceId && step === 1) {
+        if (augmentedServices.length > 0 && initialServiceId && formData.serviceId === initialServiceId && step === 1 && !editId) {
             const serviceExists = augmentedServices.some(s => s.id === initialServiceId);
 
             if (serviceExists) {
-                // Skip Step 1 and move to Step 2 for scheduling
                 setStep(2);
-
-                // >>> FIX 1: Ensure page scrolls to top when skipping step 1 <<<
                 window.scrollTo(0, 0);
-
             } else {
-                // If ID is invalid, clear it and let the user choose
                 setFormData(prev => ({ ...prev, serviceId: null }));
                 console.error("URL serviceId not found in data.");
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [augmentedServices, initialServiceId]); // Run when data loads or initial ID changes
+    }, [augmentedServices, initialServiceId, formData.serviceId, step, editId]);
+
+    useEffect(() => {
+        if (editId && augmentedServices.length > 0) {
+            const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            const bookingToEdit = existingBookings.find((b: any) => b.id === parseInt(editId));
+            if (bookingToEdit) {
+                setFormData({
+                    serviceId: bookingToEdit.service.id,
+                    date: bookingToEdit.date,
+                    time: bookingToEdit.time,
+                    details: bookingToEdit.details
+                });
+            }
+        }
+    }, [editId, augmentedServices]);
 
     const handleNext = () => {
         if (step === 3) {
-            // Save booking to localStorage
-            const booking = {
-                id: Date.now(),
-                service: selectedService,
-                date: formData.date,
-                time: formData.time,
-                details: formData.details,
-                status: 'Confirmed'
-            };
             const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-            localStorage.setItem('bookings', JSON.stringify([...existingBookings, booking]));
-            navigate('/dashboard');
+
+            if (editId) {
+                const updatedBookings = existingBookings.map((b: any) =>
+                    b.id === parseInt(editId)
+                        ? { ...b, service: selectedService, date: formData.date, time: formData.time, details: formData.details }
+                        : b
+                );
+                localStorage.setItem('bookings', JSON.stringify(updatedBookings));
+                navigate(`${ROUTES.PAYMENT}?bookingId=${editId}`);
+            } else {
+                const booking = {
+                    id: Date.now(),
+                    service: selectedService,
+                    date: formData.date,
+                    time: formData.time,
+                    details: formData.details,
+                    status: 'Pending Payment'
+                };
+                localStorage.setItem('bookings', JSON.stringify([...existingBookings, booking]));
+                navigate(`${ROUTES.PAYMENT}?bookingId=${booking.id}`);
+            }
         } else {
             setStep((prev) => Math.min(prev + 1, 3));
         }
@@ -159,7 +114,6 @@ const BookService: React.FC = () => {
         });
     };
 
-    // 3. Use augmented data for lookups
     const selectedService = augmentedServices.find(s => s.id === formData.serviceId);
 
     const slideVariants = {
@@ -168,7 +122,6 @@ const BookService: React.FC = () => {
         exit: (direction: number) => ({ x: direction < 0 ? 50 : -50, opacity: 0 })
     };
 
-    // Helper for navigation direction (needed for framer-motion exit animation)
     const direction = useMemo(() => (step > 1 ? 1 : -1), [step]);
 
     if (loading) {
@@ -187,10 +140,8 @@ const BookService: React.FC = () => {
         );
     }
 
-
     return (
         <div className="min-h-screen bg-[#f8fafc] pt-24 pb-12 relative overflow-hidden">
-            {/* Custom Scrollbar Styles (kept for context) */}
             <style>{`
                 .custom-scrollbar::-webkit-scrollbar {
                     width: 6px;
@@ -208,7 +159,6 @@ const BookService: React.FC = () => {
                 }
             `}</style>
 
-            {/* Background Elements */}
             <div className="absolute top-0 right-0 w-[55%] h-full hidden lg:block overflow-hidden pointer-events-none">
                 <div className="absolute inset-0 bg-slate-50/50" />
                 <div className="absolute inset-0 opacity-[0.3]" style={{ backgroundImage: 'radial-gradient(#64748b 2px, transparent 2px)', backgroundSize: '32px 32px' }} />
@@ -225,12 +175,8 @@ const BookService: React.FC = () => {
                     </div>
 
                     <div className="grid lg:grid-cols-3 gap-8 items-start">
-
-                        {/* MAIN WIZARD CARD */}
                         <div className="lg:col-span-2">
                             <div className="bg-white rounded-3xl shadow-xl border border-slate-100 flex flex-col h-[650px] relative overflow-hidden">
-
-                                {/* 1. FIXED HEADER: Progress Steps */}
                                 <div className="p-8 pb-4 shrink-0 bg-white z-10">
                                     <div className="flex items-center justify-between relative max-w-lg mx-auto">
                                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 -z-10" />
@@ -246,11 +192,8 @@ const BookService: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* 2. SCROLLABLE BODY: The Content */}
                                 <div className="flex-1 overflow-y-auto custom-scrollbar px-8 py-2">
                                     <AnimatePresence mode='wait' custom={direction}>
-
-                                        {/* Step 1: Services */}
                                         {step === 1 && (
                                             <motion.div
                                                 key="step1"
@@ -259,7 +202,6 @@ const BookService: React.FC = () => {
                                                 initial="enter" animate="center" exit="exit"
                                                 className="space-y-4 pb-4"
                                             >
-                                                {/* Display pre-selection message if the service ID came from the URL */}
                                                 {selectedService && initialServiceId && formData.serviceId === initialServiceId ? (
                                                     <div className="p-6 rounded-2xl border-2 border-green-200 bg-green-50/50 mb-6">
                                                         <h3 className="text-xl font-bold font-serif text-green-700 flex items-center gap-2 mb-2">
@@ -278,7 +220,7 @@ const BookService: React.FC = () => {
                                                 )}
 
                                                 <div className="grid md:grid-cols-2 gap-4">
-                                                    {augmentedServices.map((service) => ( // 4. Use augmentedServices
+                                                    {augmentedServices.map((service) => (
                                                         <div
                                                             key={service.id}
                                                             onClick={() => setFormData({ ...formData, serviceId: service.id })}
@@ -292,7 +234,7 @@ const BookService: React.FC = () => {
                                                                     }`}>
                                                                     <service.icon className="w-6 h-6" />
                                                                 </div>
-                                                                <span className="text-lg font-bold text-slate-900">₹{service.price}</span>
+                                                                <span className="text-lg font-bold text-slate-900">{formatCurrency(service.price)}</span>
                                                             </div>
                                                             <h3 className="text-xl font-bold font-serif mb-2">{service.title}</h3>
                                                             <p className="text-sm text-slate-600 mb-2">{service.description}</p>
@@ -305,7 +247,6 @@ const BookService: React.FC = () => {
                                             </motion.div>
                                         )}
 
-                                        {/* Step 2: Date & Time */}
                                         {step === 2 && (
                                             <motion.div
                                                 key="step2"
@@ -319,7 +260,7 @@ const BookService: React.FC = () => {
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-700 mb-3">Select Date</label>
                                                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                                                        {[...Array(14)].map((_, i) => { // Increased range to show scrolling
+                                                        {[...Array(14)].map((_, i) => {
                                                             const date = new Date();
                                                             date.setDate(date.getDate() + i + 1);
                                                             const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
@@ -346,7 +287,7 @@ const BookService: React.FC = () => {
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-700 mb-3">Select Time</label>
                                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                                        {timeSlots.map((time) => (
+                                                        {TIME_SLOTS.map((time) => (
                                                             <button
                                                                 key={time}
                                                                 onClick={() => setFormData({ ...formData, time })}
@@ -363,7 +304,6 @@ const BookService: React.FC = () => {
                                             </motion.div>
                                         )}
 
-                                        {/* Step 3: Details */}
                                         {step === 3 && (
                                             <motion.div
                                                 key="step3"
@@ -433,7 +373,6 @@ const BookService: React.FC = () => {
                                     </AnimatePresence>
                                 </div>
 
-                                {/* 3. FIXED FOOTER: Navigation Buttons */}
                                 <div className="p-8 pt-4 border-t border-slate-100 bg-white shrink-0 z-20">
                                     <div className="flex justify-between">
                                         <button
@@ -461,7 +400,6 @@ const BookService: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Order Summary Sidebar - Sticky */}
                         <div className="hidden lg:block lg:col-span-1">
                             <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sticky top-24">
                                 <h3 className="text-xl font-bold font-serif mb-6 pb-4 border-b border-slate-100">Booking Summary</h3>
@@ -483,7 +421,6 @@ const BookService: React.FC = () => {
                                         </div>
                                         <div>
                                             <p className="text-sm text-slate-500">When</p>
-                                            {/* >>> FIX 2: Conditionally render date and time to avoid "date @ null" <<< */}
                                             <p className="font-semibold text-slate-900">
                                                 {(formData.date && formData.time) ? `${formData.date} @ ${formData.time}` : '-'}
                                             </p>
@@ -494,7 +431,7 @@ const BookService: React.FC = () => {
                                 <div className="mt-8 pt-6 border-t border-slate-100">
                                     <div className="flex justify-between items-end mb-2">
                                         <span className="text-slate-600">Total</span>
-                                        <span className="text-2xl font-bold text-slate-900">₹{selectedService?.price || 0}</span>
+                                        <span className="text-2xl font-bold text-slate-900">{formatCurrency(selectedService?.price || 0)}</span>
                                     </div>
                                     <div className="bg-slate-50 p-3 rounded-lg flex items-center gap-2 text-xs text-slate-500 mt-4">
                                         <Shield className="w-4 h-4 text-green-600" />

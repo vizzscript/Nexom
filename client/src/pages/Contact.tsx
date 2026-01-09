@@ -1,8 +1,7 @@
-
+import { contactService } from '@/features/contact';
 import { motion } from 'framer-motion';
 import { Mail, MapPin, Phone, Send } from 'lucide-react';
 import React from 'react';
-import { contactService } from '../services/contactService';
 
 const Contact: React.FC = () => {
     const [formData, setFormData] = React.useState({
@@ -26,7 +25,7 @@ const Contact: React.FC = () => {
         setSubmitStatus('idle');
 
         try {
-            await contactService.submitForm(formData);
+            await contactService.submitContactForm(formData);
             setSubmitStatus('success');
             setFormData({
                 firstName: '',
@@ -184,7 +183,7 @@ const Contact: React.FC = () => {
                                             value={formData.phone}
                                             onChange={handleChange}
                                             className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all"
-                                            placeholder="+1 (555) 000-0000"
+                                            placeholder="+91-958323932"
                                         />
                                     </div>
                                 </div>

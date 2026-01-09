@@ -1,68 +1,25 @@
-// useServicesData.ts (New File)
+import { ENV_CONFIG } from '@/config/env.config';
+import type { BackendCategory, BackendService, FrontendCategory, FrontendService } from '@/types';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
-// Define the shape of the populated category in the service object
-export interface ServiceCategory {
-    _id: string;
-    name: string;
-}
+/**
+ * Custom hook to fetch and manage services and categories data
+ */
 
-// Define the shape of the data fetched from backend
-interface BackendCategory {
-    _id: string;
-    name: string;
-    __v: number; // Optional
-}
-
-interface BackendService {
-    _id: string;
-    title: string;
-    description: string;
-    category: ServiceCategory;
-    price: number;
-    duration: string;
-    rating: number;
-    reviews: number;
-    imageUrl: string;
-    features: string[];
-    isFeatured: boolean;
-}
-
-// Define the shape the frontend component expects
-export interface FrontendCategory {
-    id: string;          // Used for filter button key/onClick (e.g., 'All Services')
-    name: string;
-    objectId: string;    // The MongoDB _id
-}
-
-export interface FrontendService {
-    id: string;
-    title: string;
-    description: string;
-    category: ServiceCategory;
-    rating: number;
-    reviews: number;
-    price: number;
-    image: string;
-    features: string[];
-    isFeatured?: boolean; // Added for potential use in Home section
-}
-
-// --- Utility Function to get Axios Configuration with Credentials ---
 const getAuthHeaders = () => {
     return {
         withCredentials: true,
-        // headers: { ... }
     };
 };
 
 export const useServicesData = () => {
-    const API_URL = import.meta.env.VITE_SERVICE_CATALOG_URL || 'http://localhost:8082/api/v1';
+    const API_URL = ENV_CONFIG.SERVICE_CATALOG_URL;
 
     const [categories, setCategories] = useState<FrontendCategory[]>([]);
     const [services, setServices] = useState<FrontendService[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -84,13 +41,14 @@ export const useServicesData = () => {
                 }
 
                 setCategories(mappedCategories);
-            } catch (error) {
-                console.error("Error fetching categories:", error);
+            } catch (err) {
+                console.error("Error fetching categories:", err);
             }
         };
 
         const fetchServices = async () => {
             try {
+                setLoading(true);
                 const response = await axios.get(`${API_URL}/services`, getAuthHeaders());
                 const mappedServices: FrontendService[] = response.data.data.map((srv: BackendService) => ({
                     id: srv._id,
@@ -106,8 +64,10 @@ export const useServicesData = () => {
                 }));
 
                 setServices(mappedServices);
-            } catch (error) {
-                console.error("Error fetching services:", error);
+                setError(null);
+            } catch (err) {
+                setError('Failed to fetch services');
+                console.error("Error fetching services:", err);
             } finally {
                 setLoading(false);
             }
@@ -117,5 +77,5 @@ export const useServicesData = () => {
         fetchServices();
     }, [API_URL]);
 
-    return { categories, services, loading };
+    return { categories, services, loading, error };
 };

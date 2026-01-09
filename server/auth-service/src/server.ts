@@ -12,7 +12,7 @@ import cors from "cors";
 const app: Express = express();
 let server: Server;
 
-const nexomUrl = process.env.NEXOM_FRONTEND_URL;
+const nexomUrl = process.env.NEXOM_FRONTEND_URL || "http://localhost:5173";
 
 app.use(cors({
     origin: nexomUrl,

@@ -31,7 +31,15 @@ Nexom follows a microservices architecture with a React frontend:
 │ - User Mgmt    │              │ - Adv. Search      │
 └────────────────┘              └────────────────────┘
         │                                  │
-        └────────────────┬─────────────────┘
+        ├────────────────┬─────────────────┤
+        │                                  │
+ ┌──────▼─────────┐              ┌─────────▼──────────┐
+ │ Payment Service│              │ Contact Service    │
+ │   Port: 8084   │              │   Port: 8083       │
+ │                │              │                    │
+ │ - Stripe Pay   │              │ - Email Inquiries  │
+ │ - Webhooks     │              │ - Auto-replies     │
+ └────────────────┘              └────────────────────┘
                          │
                 ┌────────▼─────────┐
                 │   MongoDB        │
@@ -185,6 +193,20 @@ npm start
 | GET | `/api/v1/services/:id` | Get service by ID | ✅ |
 | POST | `/api/v1/services` | Create new service | ✅ |
 | DELETE | `/api/v1/services/:id` | Delete service | ✅ |
+
+### Payment Service (Port 8084)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/v1/payments/create-intent` | Create Stripe Payment Intent | ✅ |
+| GET | `/api/v1/payments/status/:id` | Get payment status | ✅ |
+| POST | `/api/v1/payments/webhook` | Stripe Webhook handler | ❌ |
+
+### Contact Service (Port 8083)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/v1/contact/submit` | Submit contact form | ❌ |
 
 ## 🧪 Testing
 

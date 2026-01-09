@@ -1,8 +1,9 @@
+import { ROUTES } from '@/constants';
+import { useAuth } from '@/features/auth';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, Sparkles, User, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 
 const Navbar: React.FC = () => {
     const { isAuthenticated } = useAuth();
@@ -19,10 +20,10 @@ const Navbar: React.FC = () => {
     }, []);
 
     const navLinks = [
-        { name: 'Home', path: '/' },
-        { name: 'Services', path: '/services' },
-        { name: 'About', path: '/about' },
-        { name: 'Contact', path: '/contact' },
+        { name: 'Home', path: ROUTES.HOME },
+        { name: 'Services', path: ROUTES.SERVICES },
+        { name: 'About', path: ROUTES.ABOUT },
+        { name: 'Contact', path: ROUTES.CONTACT },
     ];
 
     return (
@@ -34,7 +35,7 @@ const Navbar: React.FC = () => {
         >
             <div className="container mx-auto flex justify-between items-center">
                 {/* Logo */}
-                <Link to="/" className="flex items-center gap-2 group">
+                <Link to={ROUTES.HOME} className="flex items-center gap-2 group">
                     <div className="bg-slate-900 p-2 rounded-lg group-hover:bg-slate-800 transition-colors">
                         <Sparkles className="w-6 h-6 text-[#d4af37]" />
                     </div>
@@ -59,14 +60,14 @@ const Navbar: React.FC = () => {
                     ))}
                     {isAuthenticated ? (
                         <Link
-                            to="/dashboard"
+                            to={ROUTES.DASHBOARD}
                             className="flex items-center gap-2 text-slate-600 hover:text-[#d4af37] transition-colors"
                         >
                             <User className="w-6 h-6" />
                         </Link>
                     ) : (
                         <Link
-                            to="/login"
+                            to={ROUTES.LOGIN}
                             className="btn btn-primary text-sm px-6 py-2.5 rounded-full"
                         >
                             Login
@@ -105,7 +106,7 @@ const Navbar: React.FC = () => {
                             ))}
                             {isAuthenticated ? (
                                 <Link
-                                    to="/dashboard"
+                                    to={ROUTES.DASHBOARD}
                                     className="btn btn-primary w-full justify-center flex items-center gap-2"
                                     onClick={() => setIsOpen(false)}
                                 >
@@ -114,7 +115,7 @@ const Navbar: React.FC = () => {
                                 </Link>
                             ) : (
                                 <Link
-                                    to="/login"
+                                    to={ROUTES.LOGIN}
                                     className="btn btn-primary w-full justify-center"
                                     onClick={() => setIsOpen(false)}
                                 >
