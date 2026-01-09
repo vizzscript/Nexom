@@ -32,9 +32,9 @@ app.get('/health', (req, res) => {
 // Database connection and Server Start
 mongoose.connect(MONGO_URI)
     .then(() => {
-        console.log('Connected to MongoDB');
+        console.log('Connected to MongoDB (Payments)');
         app.listen(PORT, () => {
-            console.log(`Payment Service running on port ${PORT}`);
+            console.log(`Payment Service is running on port ${PORT}`);
         });
     })
     .catch((err) => {

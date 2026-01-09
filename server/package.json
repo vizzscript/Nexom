@@ -1,0 +1,15 @@
+{
+  "name": "nexom-server",
+  "version": "1.0.0",
+  "description": "Nexom Microservices Server Root",
+  "main": "index.js",
+  "scripts": {
+    "predev": "clear && echo '🚀 Starting Nexom Microservices...' && echo '-----------------------------------'",
+    "dev": "concurrently -n \"AUTH,CATALOG,PAYMENT,CONTACT\" -c \"blue.bold,green.bold,magenta.bold,cyan.bold\" --prefix \"[{name}] {time}\" --time-format \"HH:mm:ss\" \"npm run dev --prefix auth-service\" \"npm run dev --prefix service-catalog\" \"npm run dev --prefix payment-service\" \"npm run dev --prefix contact-service\"",
+    "install-all": "npm install --prefix auth-service && npm install --prefix service-catalog && npm install --prefix payment-service && npm install --prefix contact-service",
+    "build-all": "npm run build --prefix auth-service && npm run build --prefix service-catalog && npm run build --prefix payment-service && npm run build --prefix contact-service"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

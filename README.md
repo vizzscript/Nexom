@@ -150,7 +150,21 @@ MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/nexom?retryWr
 
 ## 🏃 Running the Application
 
-### Development Mode
+### Running All Services Concurrently
+
+You can now run all backend microservices with a single command from the `server` directory:
+
+```bash
+cd server
+npm install
+npm run dev
+```
+
+This will start the Auth Service, Service Catalog, Payment Service, and Contact Service in parallel using `concurrently`.
+
+### Individual Service Mode
+
+If you prefer to run services individually:
 
 ```bash
 # Terminal 1 - Auth Service
@@ -159,6 +173,14 @@ npm run dev
 
 # Terminal 2 - Service Catalog
 cd server/service-catalog
+npm run dev
+
+# Terminal 3 - Payment Service
+cd server/payment-service
+npm run dev
+
+# Terminal 4 - Contact Service
+cd server/contact-service
 npm run dev
 ```
 
