@@ -7,6 +7,7 @@ import Contact from '@/pages/Contact';
 import Dashboard from '@/pages/Dashboard';
 import Home from '@/pages/Home';
 import Login from '@/pages/Login';
+import Payment from '@/pages/Payment';
 import Services from '@/pages/Services';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
@@ -23,6 +24,7 @@ function App() {
             <Route path={ROUTES.CONTACT} element={<Contact />} />
             <Route path={ROUTES.LOGIN} element={<Login />} />
             <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
+            <Route path={ROUTES.PAYMENT} element={<Payment />} />
           </Routes>
         </MainLayout>
       </Router>

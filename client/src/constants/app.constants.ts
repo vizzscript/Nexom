@@ -31,4 +31,5 @@ export const ROUTES = {
     CONTACT: '/contact',
     LOGIN: '/login',
     DASHBOARD: '/dashboard',
+    PAYMENT: '/payment',
 } as const;
