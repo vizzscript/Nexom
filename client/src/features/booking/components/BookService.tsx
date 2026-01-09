@@ -34,6 +34,7 @@ const BookService: React.FC = () => {
     const navigate = useNavigate();
     const query = useQuery();
     const initialServiceId = query.get('serviceId');
+    const editId = query.get('editId');
 
     const { services, loading } = useServicesData();
 
@@ -48,7 +49,7 @@ const BookService: React.FC = () => {
     });
 
     useEffect(() => {
-        if (augmentedServices.length > 0 && initialServiceId && formData.serviceId === initialServiceId && step === 1) {
+        if (augmentedServices.length > 0 && initialServiceId && formData.serviceId === initialServiceId && step === 1 && !editId) {
             const serviceExists = augmentedServices.some(s => s.id === initialServiceId);
 
             if (serviceExists) {
@@ -59,21 +60,47 @@ const BookService: React.FC = () => {
                 console.error("URL serviceId not found in data.");
             }
         }
-    }, [augmentedServices, initialServiceId, formData.serviceId, step]);
+    }, [augmentedServices, initialServiceId, formData.serviceId, step, editId]);
+
+    useEffect(() => {
+        if (editId && augmentedServices.length > 0) {
+            const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            const bookingToEdit = existingBookings.find((b: any) => b.id === parseInt(editId));
+            if (bookingToEdit) {
+                setFormData({
+                    serviceId: bookingToEdit.service.id,
+                    date: bookingToEdit.date,
+                    time: bookingToEdit.time,
+                    details: bookingToEdit.details
+                });
+            }
+        }
+    }, [editId, augmentedServices]);
 
     const handleNext = () => {
         if (step === 3) {
-            const booking = {
-                id: Date.now(),
-                service: selectedService,
-                date: formData.date,
-                time: formData.time,
-                details: formData.details,
-                status: 'Confirmed'
-            };
             const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-            localStorage.setItem('bookings', JSON.stringify([...existingBookings, booking]));
-            navigate(ROUTES.DASHBOARD);
+
+            if (editId) {
+                const updatedBookings = existingBookings.map((b: any) =>
+                    b.id === parseInt(editId)
+                        ? { ...b, service: selectedService, date: formData.date, time: formData.time, details: formData.details }
+                        : b
+                );
+                localStorage.setItem('bookings', JSON.stringify(updatedBookings));
+                navigate(`${ROUTES.PAYMENT}?bookingId=${editId}`);
+            } else {
+                const booking = {
+                    id: Date.now(),
+                    service: selectedService,
+                    date: formData.date,
+                    time: formData.time,
+                    details: formData.details,
+                    status: 'Pending Payment'
+                };
+                localStorage.setItem('bookings', JSON.stringify([...existingBookings, booking]));
+                navigate(`${ROUTES.PAYMENT}?bookingId=${booking.id}`);
+            }
         } else {
             setStep((prev) => Math.min(prev + 1, 3));
         }

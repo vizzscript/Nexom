@@ -1,3 +1,4 @@
+import { ENV_CONFIG } from '@/config/env.config';
 import type { BackendCategory, BackendService, FrontendCategory, FrontendService } from '@/types';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
@@ -13,7 +14,7 @@ const getAuthHeaders = () => {
 };
 
 export const useServicesData = () => {
-    const API_URL = import.meta.env.VITE_SERVICE_CATALOG_URL || 'http://localhost:8082/api/v1';
+    const API_URL = ENV_CONFIG.SERVICE_CATALOG_URL;
 
     const [categories, setCategories] = useState<FrontendCategory[]>([]);
     const [services, setServices] = useState<FrontendService[]>([]);

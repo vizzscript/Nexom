@@ -12,7 +12,7 @@ config({ path: localEnvPath });
 const { SERVICE_PORT, MONGO_URI, JWT_SECRET, NODE_ENV } = process.env;
 
 export default {
-    SERVICE_PORT,
+    SERVICE_PORT: SERVICE_PORT || 8082,
     MONGO_URI,
     JWT_SECRET,
     env: NODE_ENV
