@@ -1,13 +1,15 @@
 import { config } from "dotenv";
 
-const configFile = `./.env`;
-config({ path: configFile });
+if (process.env.NODE_ENV !== 'production') {
+    const configFile = `./.env`;
+    config({ path: configFile });
+}
 
-const { MONGO_URI, AUTH_PORT, JWT_SECRET, NODE_ENV, MESSAGE_BROKER_URL, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
+const { MONGO_URI, AUTH_PORT, PORT, JWT_SECRET, NODE_ENV, MESSAGE_BROKER_URL, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
 
 export default {
     MONGO_URI,
-    AUTH_PORT: AUTH_PORT || 8081,
+    AUTH_PORT: PORT || AUTH_PORT || 8081,
     JWT_SECRET,
     env: NODE_ENV,
     msgBrokerURL: MESSAGE_BROKER_URL,
