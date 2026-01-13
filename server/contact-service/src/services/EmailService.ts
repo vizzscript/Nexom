@@ -9,6 +9,24 @@ const transporter = nodemailer.createTransport({
         user: config.smtp.user,
         pass: config.smtp.pass,
     },
+    tls: {
+        rejectUnauthorized: false
+    }
+});
+
+// Verify connection configuration
+transporter.verify(function (error, success) {
+    if (error) {
+        console.error("Contact Service SMTP Connection Error:", error);
+        console.error("SMTP Config:", {
+            host: config.smtp.host || "smtp.gmail.com",
+            port: config.smtp.port || "587",
+            user: config.smtp.user,
+            pass: config.smtp.pass ? "****" : "MISSING"
+        });
+    } else {
+        console.log("Contact Service SMTP Server is ready to take our messages");
+    }
 });
 
 export const sendContactEmail = async (data: { firstName: string, lastName: string, email: string, phone: string, subject: string, message: string }) => {

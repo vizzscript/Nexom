@@ -9,6 +9,24 @@ const transporter = nodemailer.createTransport({
         user: config.smtp.user,
         pass: config.smtp.pass,
     },
+    tls: {
+        rejectUnauthorized: false // Helps with some self-signed cert issues in dev/cloud
+    }
+});
+
+// Verify connection configuration
+transporter.verify(function (error, success) {
+    if (error) {
+        console.error("SMTP Connection Error:", error);
+        console.error("SMTP Config:", {
+            host: config.smtp.host || "smtp.gmail.com",
+            port: config.smtp.port || "587",
+            user: config.smtp.user,
+            pass: config.smtp.pass ? "****" : "MISSING"
+        });
+    } else {
+        console.log("SMTP Server is ready to take our messages");
+    }
 });
 
 export const sendOtpEmail = async (email: string, otp: string) => {
