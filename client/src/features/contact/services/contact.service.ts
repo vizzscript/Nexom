@@ -6,7 +6,9 @@ import axios from 'axios';
  * Handles contact form submissions
  */
 
-const CONTACT_API_URL = 'http://localhost:8083/api/v1/contact';
+import { ENV_CONFIG } from '@/config/env.config';
+
+const CONTACT_API_URL = `${ENV_CONFIG.CONTACT_SERVICE_URL}/contact`;
 
 export const contactService = {
     /**
