@@ -55,7 +55,7 @@ export class ServiceController {
 
     async getOne(req: Request, res: Response) {
         try {
-            const service = await serviceService.getServiceById(req.params.id);
+            const service = await serviceService.getServiceById(req.params.id as string);
             if (!service) {
                 return res.status(404).json({ success: false, message: "Service not found" });
             }
@@ -67,7 +67,7 @@ export class ServiceController {
 
     async update(req: Request, res: Response) {
         try {
-            const service = await serviceService.updateService(req.params.id, req.body);
+            const service = await serviceService.updateService(req.params.id as string, req.body);
             if (!service) {
                 return res.status(404).json({ success: false, message: "Service not found for update" });
             }
@@ -79,7 +79,7 @@ export class ServiceController {
 
     async delete(req: Request, res: Response) {
         try {
-            const service = await serviceService.deleteService(req.params.id);
+            const service = await serviceService.deleteService(req.params.id as string);
             if (!service) {
                 return res.status(404).json({ success: false, message: "Service not found for deletion" });
             }
