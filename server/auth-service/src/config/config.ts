@@ -5,7 +5,7 @@ if (process.env.NODE_ENV !== 'production') {
     config({ path: configFile });
 }
 
-const { MONGO_URI, AUTH_PORT, PORT, JWT_SECRET, NODE_ENV, MESSAGE_BROKER_URL, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
+const { MONGO_URI, AUTH_PORT, PORT, JWT_SECRET, NODE_ENV, MESSAGE_BROKER_URL, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SENDGRID_API_KEY } = process.env;
 
 export default {
     MONGO_URI,
@@ -13,6 +13,7 @@ export default {
     JWT_SECRET,
     env: NODE_ENV,
     msgBrokerURL: MESSAGE_BROKER_URL,
+    sendgridApiKey: SENDGRID_API_KEY,
     smtp: {
         host: SMTP_HOST,
         port: SMTP_PORT,
