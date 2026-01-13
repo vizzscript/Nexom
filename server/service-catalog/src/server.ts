@@ -9,11 +9,9 @@ import serviceRouter from "./routes/service.routes";
 
 const app = express();
 app.use(express.json());
-const allowedOrigins = [
-    "http://localhost:5173",
-    "https://nexom-zeta.vercel.app",
-    "https://nexom-jke6d1oxj-vizzscripts-projects.vercel.app"
-];
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+    : ["http://localhost:5173"];
 
 app.use(cors({
     origin: (origin, callback) => {

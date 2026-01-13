@@ -6,11 +6,9 @@ import contactRoutes from "./routes/contactRoutes";
 const app = express();
 
 // Middleware
-const allowedOrigins = [
-    "http://localhost:5173",
-    "https://nexom-zeta.vercel.app",
-    "https://nexom-jke6d1oxj-vizzscripts-projects.vercel.app"
-];
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+    : ["http://localhost:5173"];
 
 app.use(cors({
     origin: (origin, callback) => {
