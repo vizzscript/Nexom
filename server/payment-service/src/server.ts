@@ -11,8 +11,22 @@ const PORT = process.env.PORT || 8084;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/nexom_payments';
 
 // Middleware
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://nexom-zeta.vercel.app",
+    "https://nexom-jke6d1oxj-vizzscripts-projects.vercel.app"
+];
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+        if (allowedOrigins.includes(normalizedOrigin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 

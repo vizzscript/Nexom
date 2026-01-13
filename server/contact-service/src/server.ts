@@ -6,8 +6,22 @@ import contactRoutes from "./routes/contactRoutes";
 const app = express();
 
 // Middleware
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://nexom-zeta.vercel.app",
+    "https://nexom-jke6d1oxj-vizzscripts-projects.vercel.app"
+];
+
 app.use(cors({
-    origin: ["http://localhost:5173"], // Allow frontend
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+        if (allowedOrigins.includes(normalizedOrigin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 app.use(express.json());

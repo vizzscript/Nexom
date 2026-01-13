@@ -9,10 +9,24 @@ import serviceRouter from "./routes/service.routes";
 
 const app = express();
 app.use(express.json());
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://nexom-zeta.vercel.app",
+    "https://nexom-jke6d1oxj-vizzscripts-projects.vercel.app"
+];
+
 app.use(cors({
-    origin: process.env.NEXOM_FRONTEND_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+        if (allowedOrigins.includes(normalizedOrigin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
-}))
+}));
 
 app.use("/api/v1/services", serviceRouter);
 app.use("/api/v1/categories", categoryRouter);
