@@ -1,6 +1,6 @@
 # Nexom
 
-A modern microservices-based Home cleaing platform built with Node.js, TypeScript, and MongoDB.
+A modern microservices-based Home cleaning platform built with Node.js, TypeScript, and MongoDB.
 
 ## 🏗️ Architecture
  
@@ -16,8 +16,6 @@ Nexom follows a microservices architecture with a React frontend:
 ┌──────────────────────────▼──────────────────────────┐
 │                    API Gateway                      │
 │                   (Future)                          │
-│                    API Gateway                      │
-│                     (Future)                        │
 └─────────────────────────────────────────────────────┘
                          │
         ┌────────────────┼────────────────┐
@@ -53,19 +51,33 @@ Nexom follows a microservices architecture with a React frontend:
 Modern frontend interface built with React and Vite:
 - Premium UI with circular animations
 - Responsive design with TailwindCSS
+- **User Dashboard with Booking Management**
+- **Multi-step Booking Wizard**
 - Integrated authentication flows
 - Service browsing and filtering
 
 ### Auth Service
 Handles authentication and user management:
 - User Email OTP based login
-- Email-based OTP verification
+- Email-based OTP verification (SendGrid/Nodemailer)
 - JWT token generation and validation
 
 ### Service Catalog
 Specialized Home Cleaning Service platform:
 - Service type categorization
 - Advanced filtering (rooms, area, price)
+- Home cleaning specific attributes
+
+### Payment Service
+Handles payments and transactions:
+- Stripe Payment Intent creation
+- Webhook handling for payment status updates
+
+### Contact Service
+Manages user inquiries:
+- Contact form submission
+- Automated email replies
+- Admin notifications
 
 ### Common Modules
 Shared functionality across services:
@@ -91,6 +103,15 @@ cd Nexom
 
 ### 2. Install Dependencies
 
+You can install dependencies for all services from the root `server` directory:
+
+```bash
+cd server
+npm install
+```
+
+Or individually:
+
 ```bash
 # Auth Service
 cd server/auth-service
@@ -103,7 +124,7 @@ npm install
 
 ### 3. Environment Configuration
 
-Create `.env` files for each service:
+Create `.env` files for each service.
 
 **server/auth-service/.env**:
 ```env
@@ -111,21 +132,38 @@ PORT=8081
 MONGO_URI=mongodb://localhost:27017/nexom
 JWT_SECRET=your-super-secret-jwt-key-change-this
 NODE_ENV=development
+ALLOWED_ORIGINS=http://localhost:5173,https://your-production-app.onrender.com
 
-# Email Configuration (Ethereal for development)
-EMAIL_HOST=smtp.ethereal.email
+# Email Configuration (SendGrid or Ethereal)
+EMAIL_HOST=smtp.sendgrid.net
 EMAIL_PORT=587
-EMAIL_USER=your-ethereal-user
-EMAIL_PASS=your-ethereal-password
+EMAIL_USER=apikey
+EMAIL_PASS=your-sendgrid-api-key
 EMAIL_FROM=noreply@nexom.com
 ```
 
 **server/service-catalog/.env**:
 ```env
 SERVICE_PORT=8082
+ALLOWED_ORIGINS=http://localhost:5173,https://your-production-app.onrender.com
 ```
 
-> **Note**: The service-catalog shares `MONGO_URI`, `JWT_SECRET`, and `NODE_ENV` from auth-service's `.env` file.
+**server/contact-service/.env**:
+```env
+PORT=8083
+ALLOWED_ORIGINS=http://localhost:5173,https://your-production-app.onrender.com
+# Email config (can share with auth-service or be separate)
+```
+
+**server/payment-service/.env**:
+```env
+PORT=8084
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+ALLOWED_ORIGINS=http://localhost:5173,https://your-production-app.onrender.com
+```
+
+> **Note**: The service-catalog shares `MONGO_URI`, `JWT_SECRET`, and `NODE_ENV` from auth-service's `.env` file in development.
 
 ### 4. Start MongoDB or Use MongoDB Atlas
 
@@ -184,18 +222,21 @@ cd server/contact-service
 npm run dev
 ```
 
-### Production Build
+## 🚀 Deployment (Render)
 
-```bash
-# Build all services
-cd server/auth-service
-npm run build
-npm start
+The backend services are configured for deployment on [Render](https://render.com).
 
-cd server/service-catalog
-npm run build
-npm start
-```
+### Configuration for each service:
+
+- **Build Command**: `npm install && npm run build`
+- **Start Command**: `npm start`
+- **Environment Variables**:
+    - `NODE_ENV`: `production`
+    - `MONGO_URI`: Your MongoDB Atlas URI
+    - `JWT_SECRET`: Your production secret
+    - `ALLOWED_ORIGINS`: Your frontend production URL (e.g., `https://nexom-client.onrender.com`)
+
+Ensure you set the **Root Directory** correctly for each service (e.g., `server/auth-service`).
 
 ## 📡 API Endpoints
 
@@ -253,15 +294,6 @@ curl -X POST http://localhost:8081/api/v1/auth/verify-otp \
   }'
 ```
 
-**Resend OTP**:
-```bash
-curl -X POST http://localhost:8081/api/v1/auth/resend-otp \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "john@example.com"
-  }'
-```
-
 **Create Service** (requires JWT token):
 ```bash
 curl -X POST http://localhost:8082/api/v1/services \
@@ -287,7 +319,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deta
 - Code review guidelines
 
 ## 📝 Project Structure
- 
+
  ```
  Nexom/
  ├── client/                  # Frontend Application
@@ -327,6 +359,14 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deta
  │   │   ├── package.json
  │   │   └── tsconfig.json
  │   │
+ │   ├── contact-service/     # Contact Microservice
+ │   │   ├── src/
+ │   │   └── ...
+ │   │
+ │   ├── payment-service/     # Payment Microservice
+ │   │   ├── src/
+ │   │   └── ...
+ │   │
  │   └── common/
  │       └── db/
  │           └── connection.ts    # Shared DB connection
@@ -335,6 +375,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deta
  ├── .gitattributes
  ├── .gitmessage
  ├── CONTRIBUTING.md
+ ├── DEVELOPMENT_CHALLENGES.md
  └── README.md
  ```
  
@@ -353,17 +394,21 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deta
  - **Framework**: Express.js
  - **Database**: MongoDB with Mongoose
  - **Authentication**: JWT (JSON Web Tokens)
- - **Email**: Nodemailer
+ - **Email**: Nodemailer / SendGrid
  - **Validation**: Express Validator
+ - **Payments**: Stripe
 
 ## 📚 Documentation
 
 - [Contributing Guidelines](CONTRIBUTING.md)
-- [Development Challenges](DEVELOPMENT_CHALLENGES.md)
+- [Development Challenges & Solutions](DEVELOPMENT_CHALLENGES.md)
 
 ## 🐛 Known Issues
 
-See [DEVELOPMENT_CHALLENGES.md](DEVELOPMENT_CHALLENGES.md) for known issues and their solutions.
+See [DEVELOPMENT_CHALLENGES.md](DEVELOPMENT_CHALLENGES.md) for known issues and their solutions, including:
+- MongoDB buffering timeouts
+- CORS configuration
+- TypeScript module resolution
 
 ## 📄 License
 
