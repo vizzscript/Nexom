@@ -11,6 +11,7 @@ export default {
     PORT: PORT || CONTACT_PORT || 8083,
     env: NODE_ENV,
     sendgridApiKey: SENDGRID_API_KEY,
+    resendApiKey: process.env.RESEND_API_KEY,
     smtp: {
         host: SMTP_HOST,
         port: SMTP_PORT,

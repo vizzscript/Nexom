@@ -14,6 +14,7 @@ export default {
     env: NODE_ENV,
     msgBrokerURL: MESSAGE_BROKER_URL,
     sendgridApiKey: SENDGRID_API_KEY,
+    resendApiKey: process.env.RESEND_API_KEY,
     smtp: {
         host: SMTP_HOST,
         port: SMTP_PORT,

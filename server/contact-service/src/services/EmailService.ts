@@ -1,45 +1,20 @@
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 import config from "../config/config";
 
-const transporter = nodemailer.createTransport({
-    host: config.smtp.host || "smtp.gmail.com",
-    port: parseInt(config.smtp.port || "465"),
-    secure: true, // true for 465, false for other ports
-    auth: {
-        user: config.smtp.user,
-        pass: config.smtp.pass,
-    },
-    tls: {
-        rejectUnauthorized: false
-    },
-    family: 4
-} as nodemailer.TransportOptions);
-
-// Verify connection configuration
-transporter.verify(function (error, success) {
-    if (error) {
-        console.error("Contact Service SMTP Connection Error:", error);
-        console.error("SMTP Config:", {
-            host: config.smtp.host || "smtp.gmail.com",
-            port: config.smtp.port || "465",
-            user: config.smtp.user,
-            pass: config.smtp.pass ? "****" : "MISSING"
-        });
-    } else {
-        console.log("Contact Service SMTP Server is ready to take our messages");
-    }
-});
+if (config.sendgridApiKey) {
+    sgMail.setApiKey(config.sendgridApiKey);
+}
 
 export const sendContactEmail = async (data: { firstName: string, lastName: string, email: string, phone: string, subject: string, message: string }) => {
     try {
-        if (!config.smtp.user || !config.smtp.pass) {
-            console.warn("SMTP credentials are missing. Contact email not sent.");
+        if (!config.sendgridApiKey) {
+            console.warn("SendGrid API Key is missing. Contact email not sent.");
             return;
         }
 
-        const mailOptions = {
-            from: config.smtp.user, // Gmail requires the sender to be the authenticated user
-            to: config.adminEmail || config.smtp.user,
+        const msg = {
+            to: config.adminEmail || "admin@nexom.com",
+            from: config.smtp.user || "support@nexom.com", // Must be a verified sender
             replyTo: data.email,
             subject: `New Contact Message: ${data.subject}`,
             html: `
@@ -53,22 +28,25 @@ export const sendContactEmail = async (data: { firstName: string, lastName: stri
             `,
         };
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log("Contact email sent successfully via Gmail SMTP:", info.messageId);
-        return info;
+        const response = await sgMail.send(msg);
+        console.log("Contact email sent successfully via SendGrid");
+        return response;
     } catch (error: any) {
-        console.error("Error sending contact email via Gmail SMTP: ", error);
+        console.error("Error sending contact email via SendGrid: ", error);
+        if (error.response) {
+            console.error(error.response.body);
+        }
         throw new Error("Failed to send contact email");
     }
 };
 
 export const sendAutoReplyEmail = async (data: { firstName: string, email: string }) => {
     try {
-        if (!config.smtp.user || !config.smtp.pass) return;
+        if (!config.sendgridApiKey) return;
 
-        const mailOptions = {
-            from: config.smtp.user,
+        const msg = {
             to: data.email,
+            from: config.smtp.user || "support@nexom.com",
             subject: "We received your message",
             html: `
                 <h3>Hi ${data.firstName},</h3>
@@ -77,11 +55,11 @@ export const sendAutoReplyEmail = async (data: { firstName: string, email: strin
             `,
         };
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log("Auto-reply email sent successfully via Gmail SMTP:", info.messageId);
-        return info;
+        const response = await sgMail.send(msg);
+        console.log("Auto-reply email sent successfully via SendGrid");
+        return response;
     } catch (error: any) {
-        console.error("Error sending auto-reply email via Gmail SMTP: ", error);
+        console.error("Error sending auto-reply email via SendGrid: ", error);
     }
 };
 
