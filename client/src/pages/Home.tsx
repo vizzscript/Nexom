@@ -106,29 +106,29 @@ const Home: React.FC = () => {
                             initial={{ opacity: 0, x: 50 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
-                            className="relative h-[400px] lg:h-[500px] flex items-center justify-center lg:pl-12 scale-[0.6] sm:scale-[0.8] lg:scale-100 origin-center"
+                            className="relative h-[300px] sm:h-[400px] lg:h-[500px] flex items-center justify-center lg:pl-12 mt-12 lg:mt-0"
                         >
                             {/* Enhanced Background Elements */}
                             <div className="absolute inset-0 z-0">
                                 <motion.div
                                     animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
                                     transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#d4af37]/10 rounded-full blur-3xl"
+                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[400px] lg:w-[500px] h-[300px] sm:h-[400px] lg:h-[500px] bg-[#d4af37]/10 rounded-full blur-3xl"
                                 />
                                 <motion.div
                                     animate={{ x: [-20, 20, -20], y: [-20, 20, -20] }}
                                     transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                                    className="absolute top-0 right-0 w-64 h-64 bg-blue-100/30 rounded-full blur-3xl"
+                                    className="absolute top-0 right-0 w-40 sm:w-64 h-40 sm:h-64 bg-blue-100/30 rounded-full blur-3xl"
                                 />
                                 <motion.div
                                     animate={{ x: [20, -20, 20], y: [20, -20, 20] }}
                                     transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-                                    className="absolute bottom-0 left-0 w-64 h-64 bg-amber-100/30 rounded-full blur-3xl"
+                                    className="absolute bottom-0 left-0 w-40 sm:w-64 h-40 sm:h-64 bg-amber-100/30 rounded-full blur-3xl"
                                 />
                             </div>
 
                             {/* Central Image */}
-                            <div className="relative z-10 w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden shadow-2xl border-8 border-white/50 backdrop-blur-sm">
+                            <div className="relative z-10 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 rounded-full overflow-hidden shadow-2xl border-4 sm:border-8 border-white/50 backdrop-blur-sm">
                                 <img
                                     src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
                                     alt="Modern clean living room"
@@ -151,22 +151,32 @@ const Home: React.FC = () => {
                                 ].map((card, i) => (
                                     <motion.div
                                         key={i}
-                                        className="absolute top-1/2 left-1/2 w-48 -ml-24 -mt-10"
+                                        className="absolute top-1/2 left-1/2 w-32 sm:w-48 -ml-16 sm:-ml-24 -mt-8 sm:-mt-10"
                                         style={{
-                                            transform: `rotate(${card.angle}deg) translate(260px) rotate(-${card.angle}deg)`
+                                            // Responsive orbit radius: 140px for mobile, 260px for desktop
+                                            transform: `rotate(${card.angle}deg) translate(var(--orbit-radius, 260px)) rotate(-${card.angle}deg)`
                                         }}
                                     >
+                                        {/* CSS Variable for responsive radius */}
+                                        <style>{`
+                                            @media (max-width: 640px) {
+                                                :root { --orbit-radius: 140px; }
+                                            }
+                                            @media (min-width: 641px) {
+                                                :root { --orbit-radius: 260px; }
+                                            }
+                                        `}</style>
                                         <motion.div
                                             animate={{ rotate: -360 }}
                                             transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                                            className="bg-white p-4 rounded-2xl shadow-lg flex items-center gap-3 border border-slate-100 backdrop-blur-md bg-white/90"
+                                            className="bg-white p-2 sm:p-4 rounded-xl sm:rounded-2xl shadow-lg flex items-center gap-2 sm:gap-3 border border-slate-100 backdrop-blur-md bg-white/90"
                                         >
-                                            <div className={`w-10 h-10 ${card.bg} rounded-full flex items-center justify-center flex-shrink-0`}>
-                                                <card.icon className={`w-5 h-5 ${card.color}`} />
+                                            <div className={`w-8 h-8 sm:w-10 sm:h-10 ${card.bg} rounded-full flex items-center justify-center flex-shrink-0`}>
+                                                <card.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${card.color}`} />
                                             </div>
-                                            <div>
-                                                <h4 className="font-bold text-slate-900 text-sm">{card.text}</h4>
-                                                <p className="text-xs text-slate-500">{card.sub}</p>
+                                            <div className="min-w-0 flex-1">
+                                                <h4 className="font-bold text-slate-900 text-[10px] sm:text-sm leading-tight truncate">{card.text}</h4>
+                                                <p className="text-[8px] sm:text-xs text-slate-500 leading-tight truncate">{card.sub}</p>
                                             </div>
                                         </motion.div>
                                     </motion.div>
