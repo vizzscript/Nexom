@@ -9,15 +9,11 @@ import serviceRouter from "./routes/service.routes";
 
 const app = express();
 app.use(express.json());
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-    : ["http://localhost:5173"];
-
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin) return callback(null, true);
         const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
-        if (allowedOrigins.includes(normalizedOrigin)) {
+        if (config.ALLOWED_ORIGINS.includes(normalizedOrigin)) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));

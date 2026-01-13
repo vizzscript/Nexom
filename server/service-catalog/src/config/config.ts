@@ -9,11 +9,14 @@ if (process.env.NODE_ENV !== 'production') {
     config({ path: localEnvPath });
 }
 
-const { SERVICE_PORT, PORT, MONGO_URI, JWT_SECRET, NODE_ENV } = process.env;
+const { SERVICE_PORT, PORT, MONGO_URI, JWT_SECRET, NODE_ENV, ALLOWED_ORIGINS } = process.env;
 
 export default {
     SERVICE_PORT: PORT || SERVICE_PORT || 8082,
     MONGO_URI,
     JWT_SECRET,
+    ALLOWED_ORIGINS: ALLOWED_ORIGINS
+        ? ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+        : ["http://localhost:5173"],
     env: NODE_ENV
 }
