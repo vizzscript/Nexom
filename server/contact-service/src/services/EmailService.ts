@@ -1,14 +1,20 @@
 import nodemailer from "nodemailer";
 import config from "../config/config";
 
+const smtpPort = Number(config.smtp.port);
+
 const transporter = nodemailer.createTransport({
     host: config.smtp.host,
-    port: Number(config.smtp.port),
-    secure: false, // true for 465, false for other ports
+    port: smtpPort,
+    secure: smtpPort === 465, // true for 465 (SSL), false for 587 (STARTTLS)
     auth: {
         user: config.smtp.user,
         pass: config.smtp.pass,
     },
+    // Add timeout settings
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
 });
 
 export const sendContactEmail = async (data: { firstName: string, lastName: string, email: string, phone: string, subject: string, message: string }) => {
