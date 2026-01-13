@@ -2,6 +2,7 @@ import { contactService } from '@/features/contact';
 import { motion } from 'framer-motion';
 import { Mail, MapPin, Phone, Send } from 'lucide-react';
 import React from 'react';
+import { toast } from 'react-hot-toast';
 
 const Contact: React.FC = () => {
     const [formData, setFormData] = React.useState({
@@ -13,7 +14,6 @@ const Contact: React.FC = () => {
         message: ''
     });
     const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const [submitStatus, setSubmitStatus] = React.useState<'idle' | 'success' | 'error'>('idle');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,11 +22,10 @@ const Contact: React.FC = () => {
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        setSubmitStatus('idle');
 
         try {
             await contactService.submitContactForm(formData);
-            setSubmitStatus('success');
+            toast.success('Message sent successfully! We will get back to you soon.');
             setFormData({
                 firstName: '',
                 lastName: '',
@@ -37,7 +36,7 @@ const Contact: React.FC = () => {
             });
         } catch (error) {
             console.error(error);
-            setSubmitStatus('error');
+            toast.error('Failed to send message. Please try again later.');
         } finally {
             setIsSubmitting(false);
         }
@@ -127,12 +126,6 @@ const Contact: React.FC = () => {
                             className="bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-slate-100"
                         >
                             <h3 className="text-2xl font-bold font-serif mb-6 text-slate-900">Send us a Message</h3>
-
-                            {submitStatus === 'success' && (
-                                <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-lg border border-green-200">
-                                    Thank you! Your message has been sent successfully. We'll get back to you shortly.
-                                </div>
-                            )}
 
                             <form onSubmit={handleSendMessage} className="space-y-6">
                                 <div className="grid md:grid-cols-2 gap-6">
