@@ -3,16 +3,18 @@ import config from "../config/config";
 
 const transporter = nodemailer.createTransport({
     host: config.smtp.host || "smtp.gmail.com",
-    port: parseInt(config.smtp.port || "587"),
-    secure: false, // true for 465, false for other ports
+    port: parseInt(config.smtp.port || "465"),
+    secure: true, // true for 465, false for other ports
     auth: {
         user: config.smtp.user,
         pass: config.smtp.pass,
     },
     tls: {
-        rejectUnauthorized: false // Helps with some self-signed cert issues in dev/cloud
-    }
-});
+        rejectUnauthorized: false
+    },
+    // Force IPv4 to avoid IPv6 timeout issues on some cloud providers
+    family: 4
+} as nodemailer.TransportOptions);
 
 // Verify connection configuration
 transporter.verify(function (error, success) {
@@ -20,7 +22,7 @@ transporter.verify(function (error, success) {
         console.error("SMTP Connection Error:", error);
         console.error("SMTP Config:", {
             host: config.smtp.host || "smtp.gmail.com",
-            port: config.smtp.port || "587",
+            port: config.smtp.port || "465",
             user: config.smtp.user,
             pass: config.smtp.pass ? "****" : "MISSING"
         });
