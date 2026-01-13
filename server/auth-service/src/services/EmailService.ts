@@ -1,33 +1,34 @@
-import sgMail from "@sendgrid/mail";
+import nodemailer from "nodemailer";
 import config from "../config/config";
 
-if (config.sendgridApiKey) {
-    sgMail.setApiKey(config.sendgridApiKey);
-}
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: config.smtp.user,
+        pass: config.smtp.pass,
+    },
+});
 
 export const sendOtpEmail = async (email: string, otp: string) => {
     try {
-        if (!config.sendgridApiKey) {
-            console.warn("SendGrid API Key is missing. Email not sent.");
+        if (!config.smtp.user || !config.smtp.pass) {
+            console.warn("SMTP credentials are missing. Email not sent.");
             return;
         }
 
-        const msg = {
+        const mailOptions = {
+            from: config.smtp.user,
             to: email,
-            from: config.smtp.user || "support@nexom.com", // Must be a verified sender in SendGrid
             subject: "Your OTP for Nexom App",
             text: `Your OTP is ${otp}. It is valid for 5 minutes.`,
             html: `<p>Your OTP is <b>${otp}</b>. It is valid for 5 minutes.</p>`,
         };
 
-        const response = await sgMail.send(msg);
-        console.log("OTP Email sent successfully via SendGrid");
-        return response;
+        const info = await transporter.sendMail(mailOptions);
+        console.log("OTP Email sent successfully via Gmail SMTP:", info.messageId);
+        return info;
     } catch (error: any) {
-        console.error("Error sending email via SendGrid: ", error);
-        if (error.response) {
-            console.error(error.response.body);
-        }
+        console.error("Error sending email via Gmail SMTP: ", error);
         throw new Error("Failed to send OTP email");
     }
 };
