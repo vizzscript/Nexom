@@ -12,10 +12,20 @@ import cors from "cors";
 const app: Express = express();
 let server: Server;
 
-const nexomUrl = process.env.NEXOM_FRONTEND_URL || "http://localhost:5173";
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+    : ["http://localhost:5173"];
 
 app.use(cors({
-    origin: nexomUrl,
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+        if (allowedOrigins.includes(normalizedOrigin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 app.use(express.json());
@@ -31,7 +41,8 @@ const startServer = async () => {
 
         // Start HTTP server after database is connected
         server = app.listen(config.AUTH_PORT, () => {
-            console.log(`Server is running on PORT ${config.AUTH_PORT}`);
+            console.log(`Auth Service is running on PORT ${config.AUTH_PORT}`);
+            console.log(`CORS allowed for: ${allowedOrigins.join(', ')}`);
         });
 
         // Initialize RabbitMQ client (non-blocking if it fails)

@@ -3,6 +3,7 @@ import { authService, useAuth } from '@/features/auth';
 import { motion } from 'framer-motion';
 import { ArrowRight, KeyRound, Mail, Sparkles } from 'lucide-react';
 import React, { useState } from 'react';
+import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
@@ -22,8 +23,11 @@ const Login: React.FC = () => {
         try {
             await authService.sendOtp(email);
             setStep('otp');
+            toast.success('OTP sent to your email');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+            const message = err.response?.data?.message || 'Failed to send OTP. Please try again.';
+            setError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -38,9 +42,12 @@ const Login: React.FC = () => {
             if (data.token) {
                 login(data.token);
                 navigate(ROUTES.HOME);
+                toast.success('Welcome back!');
             }
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
+            const message = err.response?.data?.message || 'Invalid OTP. Please try again.';
+            setError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -50,9 +57,11 @@ const Login: React.FC = () => {
         setError('');
         try {
             await authService.resendOtp(email);
-            alert('OTP resent successfully!');
+            toast.success('OTP resent successfully!');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to resend OTP.');
+            const message = err.response?.data?.message || 'Failed to resend OTP.';
+            setError(message);
+            toast.error(message);
         }
     };
 

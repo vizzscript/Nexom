@@ -120,6 +120,7 @@ const CheckoutForm: React.FC<{ booking: BookingSummary; onStatusUpdate: (status:
                 <div className="py-2">
                     <CardElement
                         options={{
+                            hidePostalCode: true,
                             style: {
                                 base: {
                                     fontSize: '16px',

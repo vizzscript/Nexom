@@ -1,19 +1,22 @@
 import { config } from "dotenv";
 import path from "path";
 
-// Load auth-service .env for shared config (MONGO_URI, JWT_SECRET, NODE_ENV)
-const authServiceEnvPath = path.join(__dirname, "../../../auth-service/.env");
-config({ path: authServiceEnvPath });
+// Only load .env in development
+if (process.env.NODE_ENV !== 'production') {
+    const authServiceEnvPath = path.join(__dirname, "../../../auth-service/.env");
+    config({ path: authServiceEnvPath });
+    const localEnvPath = path.join(__dirname, "../../.env");
+    config({ path: localEnvPath });
+}
 
-// Load local .env for service-specific config (SERVICE_PORT)
-const localEnvPath = path.join(__dirname, "../../.env");
-config({ path: localEnvPath });
-
-const { SERVICE_PORT, MONGO_URI, JWT_SECRET, NODE_ENV } = process.env;
+const { SERVICE_PORT, PORT, MONGO_URI, JWT_SECRET, NODE_ENV, ALLOWED_ORIGINS } = process.env;
 
 export default {
-    SERVICE_PORT: SERVICE_PORT || 8082,
+    SERVICE_PORT: PORT || SERVICE_PORT || 8082,
     MONGO_URI,
     JWT_SECRET,
+    ALLOWED_ORIGINS: ALLOWED_ORIGINS
+        ? ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+        : ["http://localhost:5173"],
     env: NODE_ENV
 }

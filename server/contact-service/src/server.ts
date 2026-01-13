@@ -6,8 +6,20 @@ import contactRoutes from "./routes/contactRoutes";
 const app = express();
 
 // Middleware
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+    : ["http://localhost:5173"];
+
 app.use(cors({
-    origin: ["http://localhost:5173"], // Allow frontend
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+        if (allowedOrigins.includes(normalizedOrigin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 app.use(express.json());
@@ -24,6 +36,6 @@ app.get("/health", (req, res) => {
 // Start server
 const PORT = config.PORT || 8083;
 app.listen(PORT, () => {
-    console.log(`Contact Service running on port ${PORT}`);
-    console.log(`Environment: ${config.env}`);
+    console.log(`Contact Service is running on port ${PORT}`);
+    console.log(`Mode: ${config.env || 'development'}`);
 });

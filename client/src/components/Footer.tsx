@@ -13,7 +13,7 @@ const Footer: React.FC = () => {
         { name: 'Home', path: ROUTES.HOME },
         { name: 'About', path: ROUTES.ABOUT },
         { name: 'Services', path: ROUTES.SERVICES },
-        { name: 'Pricing', path: ROUTES.HOME },
+        // { name: 'Pricing', path: ROUTES.HOME },
         { name: 'Contact', path: ROUTES.CONTACT }
     ];
 

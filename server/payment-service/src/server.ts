@@ -11,8 +11,20 @@ const PORT = process.env.PORT || 8084;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/nexom_payments';
 
 // Middleware
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+    : ["http://localhost:5173"];
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+        if (allowedOrigins.includes(normalizedOrigin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 
@@ -32,9 +44,9 @@ app.get('/health', (req, res) => {
 // Database connection and Server Start
 mongoose.connect(MONGO_URI)
     .then(() => {
-        console.log('Connected to MongoDB');
+        console.log('Connected to MongoDB (Payments)');
         app.listen(PORT, () => {
-            console.log(`Payment Service running on port ${PORT}`);
+            console.log(`Payment Service is running on port ${PORT}`);
         });
     })
     .catch((err) => {
