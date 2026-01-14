@@ -12,6 +12,10 @@
 **/.env.production
 **/.env.test
 
+# Firebase Admin credentials
+server/auth-service/src/config/firebase-service-account.json
+
+
 # Build Output
 **/dist/
 **/build/
