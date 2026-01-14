@@ -41,6 +41,17 @@ export const authService = {
     },
 
     /**
+     * Login with Firebase Token
+     */
+    firebaseLogin: async (token: string): Promise<AuthResponse> => {
+        const response = await apiClient.post<AuthResponse>('/auth/firebase-login', { token });
+        if (response.data.token) {
+            localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.data.token);
+        }
+        return response.data;
+    },
+
+    /**
      * Logout user
      */
     logout: (): void => {
