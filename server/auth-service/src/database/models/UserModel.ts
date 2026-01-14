@@ -5,6 +5,9 @@ export interface IUser extends Document {
     email: string;
     otp?: string | null;
     otpExpiresAt?: Date | null;
+    firebaseUid?: string;
+    name?: string;
+    photoUrl?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -37,6 +40,20 @@ const UserSchema: Schema = new Schema(
             type: Date,
             select: false,
             default: null
+        },
+        firebaseUid: {
+            type: String,
+            unique: true,
+            sparse: true, // Allows null/undefined values to not conflict
+            select: false
+        },
+        name: {
+            type: String,
+            trim: true
+        },
+        photoUrl: {
+            type: String,
+            trim: true
         }
     },
     {
