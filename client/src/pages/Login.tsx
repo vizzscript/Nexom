@@ -37,11 +37,14 @@ const Login: React.FC = () => {
             if (isLogin) {
                 await loginWithEmail(email, password);
                 toast.success('Welcome back!');
+                navigate(ROUTES.HOME); // Go home on login
             } else {
                 await signupWithEmail(email, password);
-                toast.success('Account created successfully!');
+                toast.success('Account created successfully! Please sign in.');
+                setIsLogin(true);
+                setPassword(''); // Clear password for security
+                navigate(ROUTES.LOGIN);
             }
-            navigate(ROUTES.HOME);
         } catch (err: any) {
             console.error(err);
 
