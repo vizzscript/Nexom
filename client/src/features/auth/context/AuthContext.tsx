@@ -12,7 +12,7 @@ import { authService } from '../services/auth.service';
 
 interface AuthContextType {
     isAuthenticated: boolean;
-    user: User | null;
+    user: (User & { firebaseUid?: string; id?: string }) | null;
     login: (token: string) => void;
     logout: () => void;
     signInWithGoogle: () => Promise<void>;
@@ -24,20 +24,29 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(authService.isAuthenticated());
-    const [user, setUser] = useState<User | null>(null);
+    const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+    const [backendUser, setBackendUser] = useState<any>(() => {
+        const saved = localStorage.getItem('user_data');
+        try {
+            return saved ? JSON.parse(saved) : null;
+        } catch {
+            return null;
+        }
+    });
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            setUser(currentUser);
-            if (currentUser) {
+            setFirebaseUser(currentUser);
+            if (currentUser && !backendUser) {
                 try {
-                    // const token = await currentUser.getIdToken();
-                    // Optional: Automatically sync with backend on load/change
-                    // await authService.firebaseLogin(token); 
-                    // For now, we rely on explicit login actions to set the backend token
-                    // but we could auto-refresh here.
+                    const token = await currentUser.getIdToken();
+                    const response = await authService.firebaseLogin(token);
+                    if (response.user) {
+                        setBackendUser(response.user);
+                        localStorage.setItem('user_data', JSON.stringify(response.user));
+                    }
                 } catch (error) {
-                    console.error("Error getting token", error);
+                    console.error("Error auto-syncing with backend", error);
                 }
             }
         });
@@ -53,8 +62,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
             await signOut(auth);
             authService.logout();
+            localStorage.removeItem('user_data');
             setIsAuthenticated(false);
-            setUser(null);
+            setFirebaseUser(null);
+            setBackendUser(null);
         } catch (error) {
             console.error("Logout error", error);
         }
@@ -76,7 +87,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Backend sync step
         try {
             const token = await user.getIdToken();
-            await authService.firebaseLogin(token);
+            const response = await authService.firebaseLogin(token);
+            if (response.user) {
+                setBackendUser(response.user);
+                localStorage.setItem('user_data', JSON.stringify(response.user));
+            }
             setIsAuthenticated(true);
         } catch (backendError) {
             console.error("Backend sync failed:", backendError);
@@ -115,17 +130,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         await signOut(auth);
 
         // Reset local state just in case
-        setUser(null);
+        setFirebaseUser(null);
+        setBackendUser(null);
         setIsAuthenticated(false);
 
         return result.user;
     };
 
 
+    const combinedUser = firebaseUser ? {
+        ...firebaseUser,
+        uid: firebaseUser.uid,
+        firebaseUid: firebaseUser.uid,
+        id: backendUser?.id
+    } : (backendUser ? {
+        uid: backendUser.firebaseUid,
+        firebaseUid: backendUser.firebaseUid,
+        email: backendUser.email,
+        displayName: backendUser.name,
+        photoURL: backendUser.photoUrl,
+        id: backendUser.id
+    } : null);
+
     return (
         <AuthContext.Provider value={{
             isAuthenticated,
-            user,
+            user: combinedUser as any,
             login,
             logout,
             signInWithGoogle,
