@@ -5,7 +5,7 @@ if (process.env.NODE_ENV !== 'production') {
     config({ path: configFile });
 }
 
-const { CONTACT_PORT, PORT, NODE_ENV, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, ADMIN_EMAIL, SENDGRID_API_KEY } = process.env;
+const { CONTACT_PORT, PORT, NODE_ENV, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, ADMIN_EMAIL, SENDGRID_API_KEY, MONGO_URI } = process.env;
 
 export default {
     PORT: PORT || CONTACT_PORT || 8083,
@@ -18,5 +18,6 @@ export default {
         user: SMTP_USER,
         pass: SMTP_PASS
     },
-    adminEmail: ADMIN_EMAIL || SMTP_USER // Default to sending to the sender if not specified
+    adminEmail: ADMIN_EMAIL || SMTP_USER, // Default to sending to the sender if not specified
+    mongoUri: MONGO_URI
 }

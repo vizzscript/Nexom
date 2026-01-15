@@ -1,47 +1,96 @@
+// src/controllers/ContactController.ts
 import { Request, Response } from "express";
-import EmailService from "../services/EmailService";
+import ContactMessage from "../models/ContactMessage"; // Ensure you create this model
+// import EmailService from "../services/EmailService";
 
 export const submitContactForm = async (req: Request, res: Response) => {
     try {
-        const { firstName, lastName, email, phone, subject, message } = req.body;
+        const { firstName, lastName, email, phone, subject, message, userId } = req.body;
 
-        // Basic validation
         if (!firstName || !email || !message) {
-            return res.status(400).json({
-                status: 400,
-                message: "First name, email, and message are required."
-            });
+            return res.status(400).json({ status: 400, message: "Required fields missing." });
         }
 
-        // Send email to admin
-        await EmailService.sendContactEmail({
+        // B2C Industrial Requirement: Standardized notification content
+        const notificationTitle = `Thank you, ${firstName}!`;
+        const notificationBody = "We have received your message and added it to our support queue.";
+
+        // 1. Save to DB - Include notification fields for persistence
+        const newMessage = await ContactMessage.create({
             firstName,
             lastName,
             email,
             phone,
             subject,
-            message
+            message,
+            notificationTitle,
+            notificationBody,
+            userId,
+            status: 'pending'
         });
 
-        // Send auto-reply to user
-        await EmailService.sendAutoReplyEmail({
-            firstName,
-            email
-        });
-
+        // 2. Return ONLY the status and notification object to the frontend
         return res.status(200).json({
             status: 200,
-            message: "Message sent successfully."
+            message: "Success",
+            notification: {
+                title: notificationTitle,
+                body: notificationBody,
+                timestamp: newMessage.createdAt,
+                referenceId: newMessage._id,
+                status: newMessage.status
+            }
         });
-    } catch (error: any) {
-        console.error("Contact form error:", error);
-        return res.status(500).json({
-            status: 500,
-            message: "Failed to process your request."
-        });
+    } catch (error) {
+        console.error("DB Error:", error);
+        return res.status(500).json({ status: 500, message: "Server error." });
     }
 };
 
-export default {
-    submitContactForm
+// GET all messages for the Admin Panel
+export const fetchMessages = async (req: Request, res: Response) => {
+    try {
+        const messages = await ContactMessage.find().sort({ createdAt: -1 });
+        return res.status(200).json(messages);
+    } catch (error) {
+        return res.status(500).json({ message: "Failed to fetch messages" });
+    }
 };
+
+// PATCH to mark a message as read
+export const markAsRead = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const message = await ContactMessage.findByIdAndUpdate(id, { isRead: true }, { new: true });
+        if (!message) {
+            return res.status(404).json({ message: "Message not found" });
+        }
+        return res.status(200).json({ message: "Marked as read", data: message });
+    } catch (error) {
+        return res.status(500).json({ message: "Failed to update status" });
+    }
+};
+
+// DELETE a message
+export const deleteMessage = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const message = await ContactMessage.findByIdAndDelete(id);
+        if (!message) {
+            return res.status(404).json({ message: "Message not found" });
+        }
+        return res.status(200).json({ message: "Message deleted successfully" });
+    } catch (error) {
+        return res.status(500).json({ message: "Failed to delete message" });
+    }
+};
+
+// Export all as a default object to satisfy the route import
+const ContactController = {
+    submitContactForm,
+    fetchMessages,
+    markAsRead,
+    deleteMessage
+};
+
+export default ContactController;
