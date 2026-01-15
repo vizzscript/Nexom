@@ -1,4 +1,5 @@
 import { ROUTES } from '@/constants';
+import { useAuth } from '@/features/auth';
 import { formatCurrency } from '@/utils';
 import {
     CardElement,
@@ -186,7 +187,15 @@ const CheckoutForm: React.FC<{ booking: BookingSummary; onStatusUpdate: (status:
 };
 
 const PaymentPage: React.FC = () => {
+    const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!isAuthenticated) {
+            navigate(ROUTES.LOGIN);
+        }
+    }, [isAuthenticated, navigate]);
+
     const location = useLocation();
     const query = new URLSearchParams(location.search);
     const bookingId = query.get('bookingId');

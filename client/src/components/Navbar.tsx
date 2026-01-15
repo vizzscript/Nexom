@@ -1,7 +1,8 @@
 import { ROUTES } from '@/constants';
 import { useAuth } from '@/features/auth';
+import { contactService } from '@/features/contact/services/contact.service';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, Sparkles, User, X } from 'lucide-react';
+import { Bell, BellDot, Menu, Sparkles, User, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -9,7 +10,23 @@ const Navbar: React.FC = () => {
     const { isAuthenticated } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const location = useLocation();
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchUnreadCount();
+        }
+    }, [isAuthenticated, location.pathname]);
+
+    const fetchUnreadCount = async () => {
+        try {
+            const messages = await contactService.getMessages();
+            setUnreadCount(messages.filter(m => !m.isRead).length);
+        } catch (error) {
+            console.error('Failed to fetch unread count');
+        }
+    };
 
     useEffect(() => {
         const handleScroll = () => {
@@ -59,12 +76,30 @@ const Navbar: React.FC = () => {
                         </Link>
                     ))}
                     {isAuthenticated ? (
-                        <Link
-                            to={ROUTES.DASHBOARD}
-                            className="flex items-center gap-2 text-slate-600 hover:text-[#d4af37] transition-colors"
-                        >
-                            <User className="w-6 h-6" />
-                        </Link>
+                        <div className="flex items-center gap-4">
+                            <Link
+                                to={ROUTES.NOTIFICATIONS}
+                                className={`relative flex items-center gap-2 transition-all duration-300 hover:scale-110 ${location.pathname === ROUTES.NOTIFICATIONS ? 'text-[#d4af37]' : 'text-slate-600'}`}
+                                title="Notifications"
+                            >
+                                {unreadCount > 0 ? (
+                                    <>
+                                        <BellDot className="w-6 h-6 text-[#d4af37] animate-pulse" />
+                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white">
+                                            {unreadCount}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <Bell className="w-6 h-6" />
+                                )}
+                            </Link>
+                            <Link
+                                to={ROUTES.DASHBOARD}
+                                className="flex items-center gap-2 text-slate-600 hover:text-[#d4af37] transition-colors"
+                            >
+                                <User className="w-6 h-6" />
+                            </Link>
+                        </div>
                     ) : (
                         <Link
                             to={ROUTES.LOGIN}
@@ -105,14 +140,24 @@ const Navbar: React.FC = () => {
                                 </Link>
                             ))}
                             {isAuthenticated ? (
-                                <Link
-                                    to={ROUTES.DASHBOARD}
-                                    className="btn btn-primary w-full justify-center flex items-center gap-2"
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    <User className="w-4 h-4" />
-                                    Dashboard
-                                </Link>
+                                <div className="flex flex-col gap-2">
+                                    <Link
+                                        to={ROUTES.NOTIFICATIONS}
+                                        className="btn bg-slate-100 text-slate-900 border-none w-full justify-center flex items-center gap-2"
+                                        onClick={() => setIsOpen(false)}
+                                    >
+                                        <Bell className="w-4 h-4" />
+                                        Notifications
+                                    </Link>
+                                    <Link
+                                        to={ROUTES.DASHBOARD}
+                                        className="btn btn-primary w-full justify-center flex items-center gap-2"
+                                        onClick={() => setIsOpen(false)}
+                                    >
+                                        <User className="w-4 h-4" />
+                                        Dashboard
+                                    </Link>
+                                </div>
                             ) : (
                                 <Link
                                     to={ROUTES.LOGIN}

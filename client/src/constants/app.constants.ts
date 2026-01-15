@@ -32,4 +32,5 @@ export const ROUTES = {
     LOGIN: '/login',
     DASHBOARD: '/dashboard',
     PAYMENT: '/payment',
+    NOTIFICATIONS: '/notifications',
 } as const;
