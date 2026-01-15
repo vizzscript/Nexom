@@ -68,8 +68,8 @@ const Dashboard: React.FC = () => {
         navigate(`${ROUTES.BOOK}?editId=${id}`);
     };
 
-    const activeBookings = bookings.filter(b => b.status !== 'Cancelled');
-    const cancelledBookings = bookings.filter(b => b.status === 'Cancelled');
+    const activeBookings = bookings?.filter(b => b.status !== 'Cancelled') || [];
+    const cancelledBookings = bookings?.filter(b => b.status === 'Cancelled') || [];
 
     return (
         <div className="min-h-screen pt-24 pb-12 bg-slate-50 px-4">
