@@ -10,6 +10,7 @@ import {
     useStripe,
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, CreditCard, Lock, ShieldCheck } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
@@ -41,24 +42,15 @@ const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle'
 
         try {
             // 1. Fetch the clientSecret from your backend
-            const response = await fetch(`${ENV_CONFIG.PAYMENT_SERVICE_URL}/create-intent`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    amount: booking.service.price,
-                    bookingId: booking.id,
-                    currency: 'inr',
-                    customerEmail: booking.details.email || 'customer@example.com',
-                    serviceTitle: booking.service.title
-                })
+            const response = await axios.post(`${ENV_CONFIG.PAYMENT_SERVICE_URL}/create-intent`, {
+                amount: booking.service.price,
+                bookingId: booking.id,
+                currency: 'inr',
+                customerEmail: booking.details.email || 'customer@example.com',
+                serviceTitle: booking.service.title
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || errorData.error || 'Failed to initialize payment');
-            }
-
-            const { clientSecret } = await response.json();
+            const { clientSecret } = response.data;
 
             // 2. Confirm the payment with Stripe
             const result = await stripe.confirmCardPayment(clientSecret, {
