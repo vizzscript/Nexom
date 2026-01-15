@@ -230,7 +230,8 @@ export const firebaseLogin = async (req: Request, res: Response) => {
                 id: user._id,
                 email: user.email,
                 name: user.name,
-                photoUrl: user.photoUrl
+                photoUrl: user.photoUrl,
+                firebaseUid: uid
             }
         });
 

@@ -89,8 +89,17 @@ export const handleWebhook = async (req: Request, res: Response) => {
 
                 if (updatedPayment) {
                     console.log(`✅ Database updated for payment: ${paymentIntent.id}`);
-                    // TODO: Notify Booking Service via RabbitMQ or Webhook
-                    // Example: await notifyBookingService(updatedPayment.bookingId, 'paid');
+                    try {
+                        const bookingId = updatedPayment.bookingId;
+                        const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:8085';
+                        const axios = require('axios');
+                        await axios.patch(`${BOOKING_SERVICE_URL}/api/v1/bookings/${bookingId}`, {
+                            status: 'Paid'
+                        });
+                        console.log(`✅ Booking Service notified for Booking: ${bookingId}`);
+                    } catch (notifyError: any) {
+                        console.error(`❌ Failed to notify Booking Service: ${notifyError.message}`);
+                    }
                 }
                 break;
             }

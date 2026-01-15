@@ -1,9 +1,11 @@
 import { ROUTES, TIME_SLOTS } from '@/constants';
+import { useAuth } from '@/features/auth';
+import { bookingService } from '@/features/booking/services/booking.service';
 import { useQuery, useServicesData } from '@/hooks';
 import type { AugmentedService, BookingData, FrontendService } from '@/types';
 import { formatCurrency } from '@/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Calendar, Check, CheckCircle, Clock, Home, MapPin, Shield, Star, User } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Check, CheckCircle, Clock, Home, Loader2, MapPin, Shield, Star, User } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -36,16 +38,19 @@ const BookService: React.FC = () => {
     const initialServiceId = query.get('serviceId');
     const editId = query.get('editId');
 
-    const { services, loading } = useServicesData();
+    const { services, loading: servicesLoading } = useServicesData();
+    const { user } = useAuth();
 
     const augmentedServices = useMemo(() => augmentServices(services), [services]);
 
     const [step, setStep] = useState(1);
+    const [isSaving, setIsSaving] = useState(false);
+    const [fetchingBooking, setFetchingBooking] = useState(false);
     const [formData, setFormData] = useState<BookingData>({
         serviceId: initialServiceId || null,
         date: null,
         time: null,
-        details: { name: '', email: '', address: '', notes: '' }
+        details: { name: '', email: '', phone: '', address: '', notes: '' }
     });
 
     useEffect(() => {
@@ -64,42 +69,79 @@ const BookService: React.FC = () => {
 
     useEffect(() => {
         if (editId && augmentedServices.length > 0) {
-            const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-            const bookingToEdit = existingBookings.find((b: any) => b.id === parseInt(editId));
-            if (bookingToEdit) {
-                setFormData({
-                    serviceId: bookingToEdit.service.id,
-                    date: bookingToEdit.date,
-                    time: bookingToEdit.time,
-                    details: bookingToEdit.details
-                });
-            }
+            const fetchBookingToEdit = async () => {
+                try {
+                    setFetchingBooking(true);
+                    const bookingToEdit = await bookingService.getBookingById(editId);
+                    if (bookingToEdit) {
+                        setFormData({
+                            serviceId: bookingToEdit.serviceId,
+                            date: bookingToEdit.date,
+                            time: bookingToEdit.time,
+                            details: {
+                                name: bookingToEdit.details.name || '',
+                                email: bookingToEdit.details.email || '',
+                                phone: bookingToEdit.details.phone || '',
+                                address: bookingToEdit.details.address || '',
+                                notes: bookingToEdit.details.notes || ''
+                            }
+                        });
+                        setStep(2); // Jump to schedule if editing
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch booking for edit:', error);
+                } finally {
+                    setFetchingBooking(false);
+                }
+            };
+            fetchBookingToEdit();
         }
     }, [editId, augmentedServices]);
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (step === 3) {
-            const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            if (!user?.uid) {
+                navigate(ROUTES.LOGIN);
+                return;
+            }
 
-            if (editId) {
-                const updatedBookings = existingBookings.map((b: any) =>
-                    b.id === parseInt(editId)
-                        ? { ...b, service: selectedService, date: formData.date, time: formData.time, details: formData.details }
-                        : b
-                );
-                localStorage.setItem('bookings', JSON.stringify(updatedBookings));
-                navigate(`${ROUTES.PAYMENT}?bookingId=${editId}`);
-            } else {
-                const booking = {
-                    id: Date.now(),
-                    service: selectedService,
-                    date: formData.date,
-                    time: formData.time,
-                    details: formData.details,
-                    status: 'Pending Payment'
-                };
-                localStorage.setItem('bookings', JSON.stringify([...existingBookings, booking]));
-                navigate(`${ROUTES.PAYMENT}?bookingId=${booking.id}`);
+            if (!selectedService) return;
+
+            try {
+                setIsSaving(true);
+                if (editId) {
+                    await bookingService.updateBooking(editId, {
+                        serviceId: selectedService.id,
+                        service: {
+                            title: selectedService.title,
+                            price: selectedService.price,
+                            imageUrl: selectedService.image
+                        },
+                        date: formData.date!,
+                        time: formData.time!,
+                        details: formData.details
+                    });
+                    navigate(`${ROUTES.PAYMENT}?bookingId=${editId}`);
+                } else {
+                    const newBooking = await bookingService.createBooking({
+                        userId: user.uid,
+                        serviceId: selectedService.id,
+                        service: {
+                            title: selectedService.title,
+                            price: selectedService.price,
+                            imageUrl: selectedService.image
+                        },
+                        date: formData.date!,
+                        time: formData.time!,
+                        details: formData.details
+                    });
+                    navigate(`${ROUTES.PAYMENT}?bookingId=${newBooking.id}`);
+                }
+            } catch (error) {
+                console.error('Failed to save booking:', error);
+                alert('Failed to save booking. Please try again.');
+            } finally {
+                setIsSaving(false);
             }
         } else {
             setStep((prev) => Math.min(prev + 1, 3));
@@ -124,10 +166,11 @@ const BookService: React.FC = () => {
 
     const direction = useMemo(() => (step > 1 ? 1 : -1), [step]);
 
-    if (loading) {
+    if (servicesLoading || fetchingBooking) {
         return (
-            <div className="min-h-screen pt-24 flex items-center justify-center bg-[#f8fafc]">
-                <p className="text-xl text-slate-700">Loading services for booking...</p>
+            <div className="min-h-screen pt-24 flex flex-col items-center justify-center bg-[#f8fafc]">
+                <Loader2 className="w-12 h-12 text-[#d4af37] animate-spin mb-4" />
+                <p className="text-xl text-slate-700">Loading service details...</p>
             </div>
         );
     }
@@ -330,16 +373,16 @@ const BookService: React.FC = () => {
                                                         </div>
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <label className="text-sm font-medium text-slate-700">Email</label>
+                                                        <label className="text-sm font-medium text-slate-700">Phone Number</label>
                                                         <div className="relative">
                                                             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                                             <input
-                                                                type="email"
-                                                                name="email"
-                                                                value={formData.details.email}
+                                                                type="tel"
+                                                                name="phone"
+                                                                value={formData.details.phone}
                                                                 onChange={updateDetails}
                                                                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none"
-                                                                placeholder="john@example.com"
+                                                                placeholder="+91 98765 43210"
                                                             />
                                                         </div>
                                                     </div>
@@ -387,13 +430,23 @@ const BookService: React.FC = () => {
                                         <button
                                             onClick={handleNext}
                                             disabled={
+                                                isSaving ||
                                                 (step === 1 && !formData.serviceId) ||
                                                 (step === 2 && (!formData.date || !formData.time))
                                             }
                                             className="btn btn-primary bg-[#d4af37] text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl hover:bg-[#b5952f] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                         >
-                                            {step === 3 ? 'Confirm Booking' : 'Continue'}
-                                            {step !== 3 && <ArrowRight className="w-4 h-4" />}
+                                            {isSaving ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    Saving...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {step === 3 ? 'Confirm Booking' : 'Continue'}
+                                                    {step !== 3 && <ArrowRight className="w-4 h-4" />}
+                                                </>
+                                            )}
                                         </button>
                                     </div>
                                 </div>
