@@ -16,7 +16,7 @@ export interface Service {
     description: string;
 }
 
-export interface AugmentedService extends Service {
+export interface AugmentedService extends FrontendService {
     duration: string;
     icon: LucideIcon;
 }

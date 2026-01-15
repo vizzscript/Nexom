@@ -1,51 +1,70 @@
 import Modal from '@/components/Modal';
 import { ROUTES } from '@/constants';
 import { useAuth } from '@/features/auth';
+import { bookingService } from '@/features/booking/services/booking.service';
+import type { Booking } from '@/features/booking/types';
 import { formatCurrency } from '@/utils';
-import { AlertTriangle, Calendar, Clock, LogOut, MapPin } from 'lucide-react';
+import { AlertTriangle, Calendar, Clock, Loader2, LogOut, MapPin } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
-    const { logout, isAuthenticated } = useAuth();
+    const { logout, isAuthenticated, user } = useAuth();
     const navigate = useNavigate();
-    const [bookings, setBookings] = useState<any[]>([]);
+    const [bookings, setBookings] = useState<Booking[]>([]);
+    const [loading, setLoading] = useState(true);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-    const [bookingToCancel, setBookingToCancel] = useState<number | null>(null);
+    const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
 
     useEffect(() => {
         if (!isAuthenticated) {
             navigate(ROUTES.LOGIN);
+            return;
         }
-        const storedBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-        setBookings(storedBookings.reverse()); // Show newest first
-    }, [isAuthenticated, navigate]);
+
+        const fetchBookings = async () => {
+            if (!user?.uid) return;
+            try {
+                setLoading(true);
+                const data = await bookingService.getUserBookings(user.uid);
+                setBookings(data);
+            } catch (error) {
+                console.error('Failed to fetch bookings:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBookings();
+    }, [isAuthenticated, navigate, user?.uid]);
 
     const handleLogout = () => {
         logout();
         navigate(ROUTES.HOME);
     };
 
-    const handleCancelClick = (id: number) => {
+    const handleCancelClick = (id: string) => {
         setBookingToCancel(id);
         setIsCancelModalOpen(true);
     };
 
-    const confirmCancel = () => {
+    const confirmCancel = async () => {
         if (bookingToCancel === null) return;
 
-        const updatedBookings = bookings.map(b =>
-            b.id === bookingToCancel ? { ...b, status: 'Cancelled' } : b
-        );
-        // Store in chronological order, but keep state in reverse for display
-        const forStorage = [...updatedBookings].reverse();
-        localStorage.setItem('bookings', JSON.stringify(forStorage));
-        setBookings(updatedBookings);
-        setBookingToCancel(null);
-        setIsCancelModalOpen(false); // Close modal after confirming
+        try {
+            await bookingService.cancelBooking(bookingToCancel);
+            setBookings(bookings.map(b =>
+                b.id === bookingToCancel ? { ...b, status: 'Cancelled' } : b
+            ));
+            setBookingToCancel(null);
+            setIsCancelModalOpen(false);
+        } catch (error) {
+            console.error('Failed to cancel booking:', error);
+            alert('Failed to cancel booking. Please try again.');
+        }
     };
 
-    const handleUpdate = (id: number) => {
+    const handleUpdate = (id: string) => {
         navigate(`${ROUTES.BOOK}?editId=${id}`);
     };
 
@@ -65,7 +84,12 @@ const Dashboard: React.FC = () => {
                 <div className="space-y-8">
                     <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
                         <h2 className="text-xl font-bold mb-6">Your Bookings</h2>
-                        {activeBookings.length === 0 ? (
+                        {loading ? (
+                            <div className="flex flex-col items-center justify-center py-12">
+                                <Loader2 className="w-8 h-8 text-[#d4af37] animate-spin mb-4" />
+                                <p className="text-slate-500">Loading your bookings...</p>
+                            </div>
+                        ) : activeBookings.length === 0 ? (
                             <div className="text-center py-12">
                                 <p className="text-slate-500 mb-4">You don't have any active bookings.</p>
                                 <button onClick={() => navigate(ROUTES.SERVICES)} className="btn btn-primary px-6 py-2 rounded-full">

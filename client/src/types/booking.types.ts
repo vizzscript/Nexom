@@ -5,6 +5,7 @@
 export interface BookingDetails {
     name: string;
     email: string;
+    phone: string;
     address: string;
     notes: string;
 }

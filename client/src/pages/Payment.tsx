@@ -1,5 +1,7 @@
 import { ROUTES } from '@/constants';
 import { useAuth } from '@/features/auth';
+import { bookingService } from '@/features/booking/services/booking.service';
+import type { Booking } from '@/features/booking/types';
 import { formatCurrency } from '@/utils';
 import {
     CardElement,
@@ -18,23 +20,10 @@ import { ENV_CONFIG } from '@/config/env.config';
 // Initialize Stripe with publishable key from config
 const stripePromise = loadStripe(ENV_CONFIG.STRIPE_PUBLISHABLE_KEY);
 
-interface BookingSummary {
-    id: number;
-    service: {
-        title: string;
-        price: number;
-    };
-    date: string;
-    time: string;
-    details: {
-        name: string;
-        email: string;
-        address: string;
-    };
-    status: string;
-}
+// Use the Booking type from features/booking/types
+// interface BookingSummary { ... } removed in favor of Booking type
 
-const CheckoutForm: React.FC<{ booking: BookingSummary; onStatusUpdate: (status: 'idle' | 'success') => void }> = ({ booking, onStatusUpdate }) => {
+const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle' | 'success') => void }> = ({ booking, onStatusUpdate }) => {
     const stripe = useStripe();
     const elements = useElements();
     const navigate = useNavigate();
@@ -90,12 +79,13 @@ const CheckoutForm: React.FC<{ booking: BookingSummary; onStatusUpdate: (status:
             }
 
             if (result.paymentIntent.status === 'succeeded') {
-                // 3. Update local storage on success
-                const storedBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-                const updated = storedBookings.map((b: any) =>
-                    b.id === booking.id ? { ...b, status: 'Paid' } : b
-                );
-                localStorage.setItem('bookings', JSON.stringify(updated));
+                // 3. Update database on success
+                try {
+                    await bookingService.updateBooking(booking.id, { status: 'Paid' });
+                } catch (updateError) {
+                    console.error('Failed to update booking status in DB, but payment succeeded:', updateError);
+                    // We still show success to user because payment was successful
+                }
 
                 onStatusUpdate('success');
 
@@ -200,7 +190,8 @@ const PaymentPage: React.FC = () => {
     const query = new URLSearchParams(location.search);
     const bookingId = query.get('bookingId');
 
-    const [booking, setBooking] = useState<BookingSummary | null>(null);
+    const [booking, setBooking] = useState<Booking | null>(null);
+    const [loading, setLoading] = useState(true);
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success'>('idle');
 
     useEffect(() => {
@@ -209,17 +200,30 @@ const PaymentPage: React.FC = () => {
             return;
         }
 
-        const storedBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-        const found = storedBookings.find((b: any) => b.id === parseInt(bookingId));
+        const fetchBooking = async () => {
+            try {
+                setLoading(true);
+                const data = await bookingService.getBookingById(bookingId);
+                setBooking(data);
+            } catch (error) {
+                console.error('Failed to fetch booking:', error);
+                navigate(ROUTES.DASHBOARD);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-        if (!found) {
-            navigate(ROUTES.DASHBOARD);
-        } else {
-            setBooking(found);
-        }
+        fetchBooking();
     }, [bookingId, navigate]);
 
-    if (!booking) return null;
+    if (loading || !booking) {
+        return (
+            <div className="min-h-screen pt-24 flex flex-col items-center justify-center bg-[#f8fafc]">
+                <div className="w-12 h-12 border-4 border-[#d4af37]/20 border-t-[#d4af37] rounded-full animate-spin mb-4" />
+                <p className="text-xl text-slate-700">Loading booking details...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen pt-24 pb-12 bg-[#f8fafc] px-4 relative overflow-hidden">
