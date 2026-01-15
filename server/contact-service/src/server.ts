@@ -1,8 +1,8 @@
 import cors from "cors";
 import express from "express";
+import mongoose from "mongoose";
 import config from "./config/config";
 import contactRoutes from "./routes/contactRoutes";
-
 const app = express();
 
 // Middleware
@@ -25,6 +25,18 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
+// 2. MongoDB Connection Function
+const connectDB = async () => {
+    try {
+        await mongoose.connect(config.mongoUri as string);
+        console.log("MongoDB Connected successfully");
+    } catch (error) {
+        console.error("MongoDB connection error:", error);
+        process.exit(1); // Exit process with failure
+    }
+};
+
 // Routes
 app.use("/api/v1/contact", contactRoutes);
 
@@ -35,7 +47,9 @@ app.get("/health", (req, res) => {
 
 // Start server
 const PORT = config.PORT || 8083;
-app.listen(PORT, () => {
-    console.log(`Contact Service is running on port ${PORT}`);
-    console.log(`Mode: ${config.env || 'development'}`);
+connectDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Contact Service is running on port ${PORT}`);
+        console.log(`Mode: ${config.env || 'development'}`);
+    });
 });

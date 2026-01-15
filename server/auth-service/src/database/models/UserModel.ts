@@ -26,21 +26,21 @@ const UserSchema: Schema = new Schema(
                 message: "Please provide a valid email address."
             }
         },
-        otp: {
-            type: String,
-            select: false,
-            default: null
-        },
-        lastOtpSentAt: {
-            type: Date,
-            select: false,
-            default: null,
-        },
-        otpExpiresAt: {
-            type: Date,
-            select: false,
-            default: null
-        },
+        // otp: {
+        //     type: String,
+        //     select: false,
+        //     default: null
+        // },
+        // lastOtpSentAt: {
+        //     type: Date,
+        //     select: false,
+        //     default: null,
+        // },
+        // otpExpiresAt: {
+        //     type: Date,
+        //     select: false,
+        //     default: null
+        // },
         firebaseUid: {
             type: String,
             unique: true,
