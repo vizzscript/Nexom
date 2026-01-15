@@ -29,7 +29,7 @@ const Dashboard: React.FC = () => {
                 const data = await bookingService.getUserBookings(user.uid);
                 setBookings(data);
             } catch (error) {
-                console.error('Failed to fetch bookings:', error);
+                // Handled by global interceptor
             } finally {
                 setLoading(false);
             }
@@ -59,8 +59,7 @@ const Dashboard: React.FC = () => {
             setBookingToCancel(null);
             setIsCancelModalOpen(false);
         } catch (error) {
-            console.error('Failed to cancel booking:', error);
-            alert('Failed to cancel booking. Please try again.');
+            // Handled by global interceptor
         }
     };
 

@@ -10,11 +10,35 @@ import Login from '@/pages/Login';
 import Notifications from '@/pages/Notifications';
 import Payment from '@/pages/Payment';
 import Services from '@/pages/Services';
+import axios from 'axios';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
-import { Toaster } from 'react-hot-toast';
+import { useEffect } from 'react';
+import { toast, Toaster } from 'react-hot-toast';
 
 function App() {
+  useEffect(() => {
+    const handleGlobalError = (event: ErrorEvent) => {
+      toast.error(`System Error: ${event.message}`);
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      // Don't toast for axios errors here as they are already handled by interceptors
+      // Unless it's an unexpected non-axios rejection
+      if (!axios.isAxiosError(event.reason)) {
+        toast.error(`Promise Error: ${event.reason?.message || 'Something went wrong'}`);
+      }
+    };
+
+    window.addEventListener('error', handleGlobalError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleGlobalError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
   return (
     <Router>
       <AuthProvider>

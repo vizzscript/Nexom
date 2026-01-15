@@ -89,7 +89,7 @@ const BookService: React.FC = () => {
                         setStep(2); // Jump to schedule if editing
                     }
                 } catch (error) {
-                    console.error('Failed to fetch booking for edit:', error);
+                    // Handled by global interceptor
                 } finally {
                     setFetchingBooking(false);
                 }
@@ -138,8 +138,7 @@ const BookService: React.FC = () => {
                     navigate(`${ROUTES.PAYMENT}?bookingId=${newBooking.id}`);
                 }
             } catch (error) {
-                console.error('Failed to save booking:', error);
-                alert('Failed to save booking. Please try again.');
+                // Handled by global interceptor
             } finally {
                 setIsSaving(false);
             }

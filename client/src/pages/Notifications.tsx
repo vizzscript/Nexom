@@ -42,7 +42,7 @@ const Notifications = () => {
             const data = await contactService.getMessages();
             setMessages(Array.isArray(data) ? data : []);
         } catch (error) {
-            toast.error('Failed to fetch notifications');
+            // Handled by global interceptor
         } finally {
             setLoading(false);
         }
@@ -56,7 +56,7 @@ const Notifications = () => {
             );
             toast.success('Marked as read');
         } catch (error) {
-            toast.error('Failed to update status');
+            // Handled by global interceptor
         }
     };
 
@@ -72,7 +72,7 @@ const Notifications = () => {
             toast.success('Notification deleted');
             setDeleteModal({ isOpen: false, id: '' });
         } catch (error) {
-            toast.error('Failed to delete notification');
+            // Handled by global interceptor
         }
     };
 

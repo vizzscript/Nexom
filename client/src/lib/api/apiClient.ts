@@ -2,6 +2,21 @@ import { ENV_CONFIG } from '@/config/env.config';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import axios from 'axios';
 
+import { toast } from 'react-hot-toast';
+
+// Set up global axios interceptors for all axios instances that use the default export
+axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        // Skip toast for 401 as it's handled by redirection
+        if (error.response?.status !== 401) {
+            const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
+            toast.error(message);
+        }
+        return Promise.reject(error);
+    }
+);
+
 /**
  * API Client Configuration
  * Centralized axios instance with interceptors
@@ -41,10 +56,14 @@ class ApiClient {
         this.instance.interceptors.response.use(
             (response) => response,
             (error) => {
+                // If 401, handle redirection. The actual toast is handled by global interceptor if it wasn't a 401.
+                // However, since we used axios.create, we must also add the toast here OR not use axios.create
                 if (error.response?.status === 401) {
-                    // Handle unauthorized access
                     localStorage.removeItem('token');
                     window.location.href = '/login';
+                } else {
+                    const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
+                    toast.error(message);
                 }
                 return Promise.reject(error);
             }

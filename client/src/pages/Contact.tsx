@@ -127,7 +127,7 @@ const Contact: React.FC = () => {
                 setFormData({ firstName: '', lastName: '', email: '', phone: '', subject: 'General Inquiry', message: '' });
             }
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Something went wrong');
+            // Error is handled by global interceptor
         } finally {
             setIsSubmitting(false);
         }
