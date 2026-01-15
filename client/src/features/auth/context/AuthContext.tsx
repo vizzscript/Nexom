@@ -16,8 +16,8 @@ interface AuthContextType {
     login: (token: string) => void;
     logout: () => void;
     signInWithGoogle: () => Promise<void>;
-    loginWithEmail: (email: string, pass: string) => Promise<void>;
-    signupWithEmail: (email: string, pass: string) => Promise<void>;
+    loginWithEmail: (email: string, pass: string) => Promise<User>;
+    signupWithEmail: (email: string, pass: string) => Promise<User>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,31 +60,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const handleFirebaseAction = async (action: () => Promise<any>) => {
+    const handleFirebaseAction = async (action: () => Promise<any>): Promise<User> => {
         let result;
 
-        // 1️⃣ Firebase auth step
+        // Firebase auth step
         try {
             result = await action();
         } catch (firebaseError: any) {
-            // 🔥 THIS preserves auth/user-not-found
             console.error("Firebase Auth Error:", firebaseError.code);
-            throw firebaseError;
+            throw firebaseError; // Rethrow so the component can catch it
         }
 
-        // 2️⃣ Backend sync step (should NOT block login UI)
+        const user = result.user;
+
+        // Backend sync step
         try {
-            const user = result.user;
             const token = await user.getIdToken();
             await authService.firebaseLogin(token);
             setIsAuthenticated(true);
-            return user;
         } catch (backendError) {
             console.error("Backend sync failed:", backendError);
-            // ⚠️ Optional: show warning toast, but do NOT block login
             setIsAuthenticated(true);
-            return result.user;
         }
+
+        return user; // Crucial: Return the user object here
     };
 
 
@@ -98,10 +97,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         );
     };
 
+    // Inside AuthProvider in your AuthContext file
+
     const signupWithEmail = async (email: string, pass: string) => {
-        return handleFirebaseAction(() =>
-            createUserWithEmailAndPassword(auth, email, pass)
-        );
+        // Create the user in Firebase
+        const result = await createUserWithEmailAndPassword(auth, email, pass);
+
+        // Optional: Backend sync (if you want the backend to know about the user now)
+        try {
+            const token = await result.user.getIdToken();
+            await authService.firebaseLogin(token);
+        } catch (err) {
+            console.error("Backend sync failed during signup:", err);
+        }
+
+        // The "Secret Sauce": Sign out immediately so they aren't auto-logged in
+        await signOut(auth);
+
+        // Reset local state just in case
+        setUser(null);
+        setIsAuthenticated(false);
+
+        return result.user;
     };
 
 
