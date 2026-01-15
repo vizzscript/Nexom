@@ -25,11 +25,14 @@ export const useServicesData = () => {
         const fetchCategories = async () => {
             try {
                 const response = await axios.get(`${API_URL}/categories`, getAuthHeaders());
-                const mappedCategories: FrontendCategory[] = response.data.data.map((cat: BackendCategory) => ({
-                    id: cat.name,
-                    name: cat.name,
-                    objectId: cat._id,
-                }));
+                const categoriesData = response.data?.data;
+                const mappedCategories: FrontendCategory[] = Array.isArray(categoriesData)
+                    ? categoriesData.map((cat: BackendCategory) => ({
+                        id: cat.name,
+                        name: cat.name,
+                        objectId: cat._id,
+                    }))
+                    : [];
 
                 const allCategoryIndex = mappedCategories.findIndex(c => c.name === 'All Services');
                 if (allCategoryIndex > -1) {
@@ -50,18 +53,21 @@ export const useServicesData = () => {
             try {
                 setLoading(true);
                 const response = await axios.get(`${API_URL}/services`, getAuthHeaders());
-                const mappedServices: FrontendService[] = response.data.data.map((srv: BackendService) => ({
-                    id: srv._id,
-                    title: srv.title,
-                    description: srv.description,
-                    category: srv.category,
-                    rating: srv.rating,
-                    reviews: srv.reviews,
-                    price: srv.price,
-                    image: srv.imageUrl,
-                    features: srv.features,
-                    isFeatured: srv.isFeatured,
-                }));
+                const servicesData = response.data?.data;
+                const mappedServices: FrontendService[] = Array.isArray(servicesData)
+                    ? servicesData.map((srv: BackendService) => ({
+                        id: srv._id,
+                        title: srv.title,
+                        description: srv.description,
+                        category: srv.category,
+                        rating: srv.rating,
+                        reviews: srv.reviews,
+                        price: srv.price,
+                        image: srv.imageUrl,
+                        features: srv.features,
+                        isFeatured: srv.isFeatured,
+                    }))
+                    : [];
 
                 setServices(mappedServices);
                 setError(null);

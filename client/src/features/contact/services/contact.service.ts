@@ -48,7 +48,7 @@ export const contactService = {
 
     getMessages: async (): Promise<ContactMessage[]> => {
         const response = await axios.get<ContactMessage[]>(`${CONTACT_API_URL}/messages`);
-        return response.data;
+        return Array.isArray(response.data) ? response.data : [];
     },
 
     markAsRead: async (id: string): Promise<any> => {

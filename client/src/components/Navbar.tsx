@@ -22,7 +22,9 @@ const Navbar: React.FC = () => {
     const fetchUnreadCount = async () => {
         try {
             const messages = await contactService.getMessages();
-            setUnreadCount(messages.filter(m => !m.isRead).length);
+            if (Array.isArray(messages)) {
+                setUnreadCount(messages.filter(m => !m.isRead).length);
+            }
         } catch (error) {
             console.error('Failed to fetch unread count');
         }

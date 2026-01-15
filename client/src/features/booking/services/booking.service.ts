@@ -22,7 +22,7 @@ export const bookingService = {
 
     getUserBookings: async (userId: string): Promise<Booking[]> => {
         const response = await axios.get(`${API_URL}/user/${userId}`, getAuthHeaders());
-        return response.data.data;
+        return Array.isArray(response.data.data) ? response.data.data : [];
     },
 
     getBookingById: async (id: string): Promise<Booking> => {

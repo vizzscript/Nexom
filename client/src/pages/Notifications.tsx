@@ -40,7 +40,7 @@ const Notifications = () => {
         try {
             setLoading(true);
             const data = await contactService.getMessages();
-            setMessages(data);
+            setMessages(Array.isArray(data) ? data : []);
         } catch (error) {
             toast.error('Failed to fetch notifications');
         } finally {
@@ -119,7 +119,7 @@ const Notifications = () => {
                     <div className="flex items-center gap-3 bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
                         <div className="px-4 py-2 bg-slate-50 rounded-xl">
                             <span className="text-xs text-slate-400 block uppercase tracking-wider font-bold">Unread</span>
-                            <span className="text-xl font-bold text-slate-900">{messages.filter(m => !m.isRead).length}</span>
+                            <span className="text-xl font-bold text-slate-900">{messages?.filter(m => !m.isRead).length || 0}</span>
                         </div>
                         <div className="px-4 py-2">
                             <span className="text-xs text-slate-400 block uppercase tracking-wider font-bold">Total</span>
