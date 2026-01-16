@@ -46,7 +46,7 @@ const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle'
                 amount: booking.service.price,
                 bookingId: booking.id,
                 currency: 'inr',
-                customerEmail: booking.details.email || 'customer@example.com',
+                customerEmail: 'customer@example.com',
                 serviceTitle: booking.service.title
             });
 
@@ -57,8 +57,8 @@ const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle'
                 payment_method: {
                     card: elements.getElement(CardElement)!,
                     billing_details: {
-                        name: booking.details.name || 'Customer Name',
-                        email: booking.details.email,
+                        name: 'Customer',
+                        phone: booking.details.phone,
                     },
                 }
             });

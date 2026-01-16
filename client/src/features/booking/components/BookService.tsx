@@ -50,7 +50,7 @@ const BookService: React.FC = () => {
         serviceId: initialServiceId || null,
         date: null,
         time: null,
-        details: { name: '', email: '', phone: '', address: '', notes: '' }
+        details: { phone: '', address: '', notes: '' }
     });
 
     useEffect(() => {
@@ -79,8 +79,6 @@ const BookService: React.FC = () => {
                             date: bookingToEdit.date,
                             time: bookingToEdit.time,
                             details: {
-                                name: bookingToEdit.details.name || '',
-                                email: bookingToEdit.details.email || '',
                                 phone: bookingToEdit.details.phone || '',
                                 address: bookingToEdit.details.address || '',
                                 notes: bookingToEdit.details.notes || ''
@@ -357,20 +355,6 @@ const BookService: React.FC = () => {
                                                 <h2 className="text-2xl font-bold font-serif mb-6 sticky top-0 bg-white py-2 z-10">Your Details</h2>
 
                                                 <div className="grid md:grid-cols-2 gap-6">
-                                                    <div className="space-y-2">
-                                                        <label className="text-sm font-medium text-slate-700">Full Name</label>
-                                                        <div className="relative">
-                                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                                            <input
-                                                                type="text"
-                                                                name="name"
-                                                                value={formData.details.name}
-                                                                onChange={updateDetails}
-                                                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none"
-                                                                placeholder="John Doe"
-                                                            />
-                                                        </div>
-                                                    </div>
                                                     <div className="space-y-2">
                                                         <label className="text-sm font-medium text-slate-700">Phone Number</label>
                                                         <div className="relative">

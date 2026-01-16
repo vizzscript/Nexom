@@ -35,14 +35,14 @@ export const createPaymentIntent = async (req: Request, res: Response) => {
             customerEmail: customerEmail,
         });
 
-        console.log(`✅ Payment Intent created: ${paymentIntent.id} for Booking: ${bookingId}`);
+        console.log(`Payment Intent created: ${paymentIntent.id} for Booking: ${bookingId}`);
 
         res.status(200).json({
             clientSecret: paymentIntent.client_secret,
             paymentIntentId: paymentIntent.id,
         });
     } catch (error: any) {
-        console.error('❌ Create Payment Intent Error:', error);
+        console.error('Create Payment Intent Error:', error);
         res.status(500).json({
             error: 'Failed to initialize payment',
             message: error.message
@@ -65,11 +65,11 @@ export const handleWebhook = async (req: Request, res: Response) => {
             event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
         } else {
             // Fallback for development if secret is not set
-            console.warn('⚠️ Webhook signature verification skipped. Use STRIPE_WEBHOOK_SECRET in production.');
+            console.warn('Webhook signature verification skipped. Use STRIPE_WEBHOOK_SECRET in production.');
             event = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
         }
     } catch (err: any) {
-        console.error(`❌ Webhook Error: ${err.message}`);
+        console.error(`Webhook Error: ${err.message}`);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
@@ -78,7 +78,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
         switch (event.type) {
             case 'payment_intent.succeeded': {
                 const paymentIntent = event.data.object as Stripe.PaymentIntent;
-                console.log(`💰 Payment succeeded: ${paymentIntent.id} for ${paymentIntent.amount / 100} ${paymentIntent.currency.toUpperCase()}`);
+                console.log(`Payment succeeded: ${paymentIntent.id} for ${paymentIntent.amount / 100} ${paymentIntent.currency.toUpperCase()}`);
 
                 // Update payment status in database
                 const updatedPayment = await Payment.findOneAndUpdate(
@@ -88,7 +88,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
                 );
 
                 if (updatedPayment) {
-                    console.log(`✅ Database updated for payment: ${paymentIntent.id}`);
+                    console.log(`Database updated for payment: ${paymentIntent.id}`);
                     try {
                         const bookingId = updatedPayment.bookingId;
                         const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:8085';
@@ -96,9 +96,9 @@ export const handleWebhook = async (req: Request, res: Response) => {
                         await axios.patch(`${BOOKING_SERVICE_URL}/api/v1/bookings/${bookingId}`, {
                             status: 'Paid'
                         });
-                        console.log(`✅ Booking Service notified for Booking: ${bookingId}`);
+                        console.log(`Booking Service notified for Booking: ${bookingId}`);
                     } catch (notifyError: any) {
-                        console.error(`❌ Failed to notify Booking Service: ${notifyError.message}`);
+                        console.error(`Failed to notify Booking Service: ${notifyError.message}`);
                     }
                 }
                 break;
@@ -106,7 +106,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
             case 'payment_intent.payment_failed': {
                 const paymentIntent = event.data.object as Stripe.PaymentIntent;
                 const errorMessage = paymentIntent.last_payment_error?.message || 'Unknown error';
-                console.log(`❌ Payment failed: ${paymentIntent.id}. Error: ${errorMessage}`);
+                console.log(`Payment failed: ${paymentIntent.id}. Error: ${errorMessage}`);
 
                 await Payment.findOneAndUpdate(
                     { stripePaymentIntentId: paymentIntent.id },
@@ -116,14 +116,14 @@ export const handleWebhook = async (req: Request, res: Response) => {
             }
             case 'payment_intent.processing': {
                 const paymentIntent = event.data.object as Stripe.PaymentIntent;
-                console.log(`⏳ Payment processing: ${paymentIntent.id}`);
+                console.log(`Payment processing: ${paymentIntent.id}`);
                 break;
             }
             default:
-                console.log(`ℹ️ Unhandled event type ${event.type}`);
+                console.log(`Unhandled event type ${event.type}`);
         }
     } catch (dbError: any) {
-        console.error(`❌ Database Update Error during webhook: ${dbError.message}`);
+        console.error(`Database Update Error during webhook: ${dbError.message}`);
         // We still return 200 to Stripe to avoid retries if the event was received but DB update failed
         // In a real app, we might want to return 500 if we want Stripe to retry
     }
