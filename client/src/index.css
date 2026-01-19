@@ -42,49 +42,6 @@
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
-/* Dark Mode Variables */
-.dark {
-  /* Brand Colors */
-  --color-primary: #f8fafc;
-  /* Slate 50 for dark mode */
-  --color-primary-light: #e2e8f0;
-  /* Slate 200 */
-  --color-accent: #d4af37;
-  /* Keep the gold accent */
-  --color-accent-hover: #e6c658;
-  /* Lighter gold on hover */
-
-  /* Text Colors */
-  --text-main: #f8fafc;
-  /* Light text for dark backgrounds */
-  --text-muted: #94a3b8;
-  /* Slate 400 */
-  --text-light: #0f172a;
-  /* Dark text (inverted) */
-
-  /* Backgrounds */
-  --bg-main: #0f172a;
-  /* Slate 900 as main background */
-  --bg-secondary: #1e293b;
-  /* Slate 800 for secondary surfaces */
-  --bg-surface: #1e293b;
-  /* Slate 800 for cards/surfaces */
-
-  /* Functional */
-  --success: #10b981;
-  /* Keep green for success */
-  --error: #ef4444;
-  /* Keep red for errors */
-  --warning: #f59e0b;
-  /* Keep amber for warnings */
-
-  /* Shadows for dark mode */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.5);
-}
-
 * {
   margin: 0;
   padding: 0;

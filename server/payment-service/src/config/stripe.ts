@@ -6,7 +6,7 @@ dotenv.config();
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 
 if (!STRIPE_SECRET_KEY || STRIPE_SECRET_KEY === 'sk_test_your_secret_key_here' || STRIPE_SECRET_KEY === 'sk_test_placeholder') {
-    console.error('ERROR: STRIPE_SECRET_KEY is missing or using a placeholder in .env file.');
+    console.error('❌ ERROR: STRIPE_SECRET_KEY is missing or using a placeholder in .env file.');
     console.error('Please get your real test keys from: https://dashboard.stripe.com/test/apikeys');
 }
 

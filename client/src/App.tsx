@@ -1,5 +1,4 @@
 import { ROUTES } from '@/constants';
-import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/features/auth';
 import { BookService } from '@/features/booking';
 import { MainLayout } from '@/layouts';
@@ -41,52 +40,50 @@ function App() {
   }, []);
 
   return (
-    <ThemeProvider>
-      <Router>
-        <AuthProvider>
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: 'var(--bg-surface)',
-                color: 'var(--text-main)',
-                borderRadius: '12px',
-                padding: '12px 24px',
-                fontSize: '14px',
-                fontWeight: '500',
-                border: '1px solid rgba(212, 175, 55, 0.2)',
+    <Router>
+      <AuthProvider>
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#0f172a',
+              color: '#fff',
+              borderRadius: '12px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+              border: '1px solid rgba(212, 175, 55, 0.2)',
+            },
+            success: {
+              iconTheme: {
+                primary: '#d4af37',
+                secondary: '#0f172a',
               },
-              success: {
-                iconTheme: {
-                  primary: '#d4af37',
-                  secondary: 'var(--bg-surface)',
-                },
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
               },
-              error: {
-                iconTheme: {
-                  primary: '#ef4444',
-                  secondary: 'var(--text-main)',
-                },
-              },
-            }}
-          />
-          <MainLayout>
-            <Routes>
-              <Route path={ROUTES.HOME} element={<Home />} />
-              <Route path={ROUTES.SERVICES} element={<Services />} />
-              <Route path={ROUTES.BOOK} element={<BookService />} />
-              <Route path={ROUTES.ABOUT} element={<About />} />
-              <Route path={ROUTES.CONTACT} element={<Contact />} />
-              <Route path={ROUTES.LOGIN} element={<Login />} />
-              <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-              <Route path={ROUTES.PAYMENT} element={<Payment />} />
-              <Route path={ROUTES.NOTIFICATIONS} element={<Notifications />} />
-            </Routes>
-          </MainLayout>
-        </AuthProvider>
-      </Router>
-    </ThemeProvider>
+            },
+          }}
+        />
+        <MainLayout>
+          <Routes>
+            <Route path={ROUTES.HOME} element={<Home />} />
+            <Route path={ROUTES.SERVICES} element={<Services />} />
+            <Route path={ROUTES.BOOK} element={<BookService />} />
+            <Route path={ROUTES.ABOUT} element={<About />} />
+            <Route path={ROUTES.CONTACT} element={<Contact />} />
+            <Route path={ROUTES.LOGIN} element={<Login />} />
+            <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
+            <Route path={ROUTES.PAYMENT} element={<Payment />} />
+            <Route path={ROUTES.NOTIFICATIONS} element={<Notifications />} />
+          </Routes>
+        </MainLayout>
+      </AuthProvider>
+    </Router>
   );
 }
 
