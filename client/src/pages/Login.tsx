@@ -37,16 +37,17 @@ const Login: React.FC = () => {
             if (isLogin) {
                 await loginWithEmail(email, password);
                 toast.success('Welcome back!');
-                navigate(ROUTES.HOME);
+                navigate(ROUTES.HOME); // Go home on login
             } else {
                 await signupWithEmail(email, password);
                 toast.success('Account created successfully! Please sign in.');
                 setIsLogin(true);
-                setPassword('');
+                setPassword(''); // Clear password for security
                 navigate(ROUTES.LOGIN);
             }
         } catch (err: any) {
             console.error(err);
+
             let message = 'Authentication failed.';
 
             if (err.code === 'auth/invalid-credential')
@@ -60,26 +61,27 @@ const Login: React.FC = () => {
 
             setError(message);
             toast.error(message);
-        } finally {
+        }
+        finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen pt-20 flex items-center justify-center bg-slate-50 dark:bg-[#0f172a] px-4 transition-colors duration-300">
+        <div className="min-h-screen pt-20 flex items-center justify-center bg-slate-50 px-4">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-slate-800 p-8 md:p-10 rounded-3xl shadow-xl w-full max-w-md border border-slate-100 dark:border-slate-700"
+                className="bg-white p-8 md:p-10 rounded-3xl shadow-xl w-full max-w-md border border-slate-100"
             >
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-slate-900 dark:bg-slate-700 text-[#d4af37] mb-4 shadow-lg shadow-black/20">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-slate-900 text-[#d4af37] mb-4">
                         <Sparkles className="w-6 h-6" />
                     </div>
-                    <h2 className="text-3xl font-bold font-serif text-slate-900 dark:text-white mb-2">
+                    <h2 className="text-3xl font-bold font-serif text-slate-900 mb-2">
                         {isLogin ? 'Welcome Back' : 'Create Account'}
                     </h2>
-                    <p className="text-slate-500 dark:text-slate-400">
+                    <p className="text-slate-500">
                         {isLogin
                             ? 'Sign in to manage your bookings'
                             : 'Join us to book premium services'
@@ -88,25 +90,21 @@ const Login: React.FC = () => {
                 </div>
 
                 {error && (
-                    <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-xl border border-red-100 dark:border-red-900/30"
-                    >
+                    <div className="mb-6 p-4 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">
                         {error}
-                    </motion.div>
+                    </div>
                 )}
 
                 <form onSubmit={handleEmailAuth} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email Address</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
                         <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" />
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                             <input
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-[#d4af37] dark:focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all"
                                 placeholder="you@example.com"
                                 required
                             />
@@ -114,14 +112,14 @@ const Login: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Password</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Password</label>
                         <div className="relative">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" />
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                             <input
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-[#d4af37] dark:focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all"
                                 placeholder="••••••••"
                                 required
                                 minLength={6}
@@ -132,7 +130,7 @@ const Login: React.FC = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3.5 rounded-xl text-base font-bold bg-[#d4af37] hover:bg-[#b5952f] text-white flex items-center justify-center gap-2 group disabled:opacity-70 transition-all shadow-lg shadow-[#d4af37]/20"
+                        className="btn btn-primary w-full py-3.5 rounded-xl text-base flex items-center justify-center gap-2 group disabled:opacity-70"
                     >
                         {loading ? (isLogin ? 'Signing In...' : 'Creating Account...') : (isLogin ? 'Sign In' : 'Sign Up')}
                         {!loading && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
@@ -142,29 +140,29 @@ const Login: React.FC = () => {
                 <div className="mt-6">
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
+                            <div className="w-full border-t border-slate-200"></div>
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px] font-bold">Or continue with</span>
+                            <span className="px-2 bg-white text-slate-500">Or continue with</span>
                         </div>
                     </div>
 
                     <button
                         type="button"
                         onClick={handleGoogleLogin}
-                        className="mt-6 w-full py-3.5 rounded-xl border border-slate-200 dark:border-slate-600 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors bg-transparent"
+                        className="mt-6 w-full py-3.5 rounded-xl border border-slate-200 flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
                     >
                         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-                        <span className="text-slate-700 dark:text-slate-300 font-medium">Google</span>
+                        <span className="text-slate-700 font-medium">Google</span>
                     </button>
                 </div>
 
                 <div className="mt-8 text-center">
-                    <p className="text-slate-600 dark:text-slate-400">
+                    <p className="text-slate-600">
                         {isLogin ? "Don't have an account? " : "Already have an account? "}
                         <button
                             onClick={() => setIsLogin(!isLogin)}
-                            className="text-[#d4af37] font-bold hover:underline"
+                            className="text-[#d4af37] font-medium hover:underline"
                         >
                             {isLogin ? 'Sign Up' : 'Sign In'}
                         </button>

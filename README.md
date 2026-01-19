@@ -24,20 +24,20 @@ Nexom follows a microservices architecture with a React frontend:
 │  Auth Service  │              │ Service Catalog    │
 │   Port: 8081   │              │   Port: 8082       │
 │                │              │                    │
-│ - Firebase Auth│              │ - Home Cleaning    │
-│ - OTP Login    │              │ - Services List    │
+│ - JWT Auth     │              │ - Home Cleaning    │
+│ - Email OTP    │              │ - Services List    │
 │ - User Mgmt    │              │ - Adv. Search      │
 └────────────────┘              └────────────────────┘
         │                                  │
         ├────────────────┬─────────────────┤
-        │                │                 │
- ┌──────▼─────────┐ ┌────▼──────────┐ ┌────▼─────────────┐
- │ Payment Service│ │Booking Service│ │ Contact Service  │
- │   Port: 8084   │ │   Port: 8085   │ │   Port: 8083     │
- │                │ │                │ │                 │
- │ - Stripe Pay   │ │ - Bookings     │ │ - Email Inquiries│
- │ - Webhooks     │ │ - Status Mgmt  │ │ - Auto-replies   │
- └────────────────┘ └────────────────┘ └─────────────────┘
+        │                                  │
+ ┌──────▼─────────┐              ┌─────────▼──────────┐
+ │ Payment Service│              │ Contact Service    │
+ │   Port: 8084   │              │   Port: 8083       │
+ │                │              │                    │
+ │ - Stripe Pay   │              │ - Email Inquiries  │
+ │ - Webhooks     │              │ - Auto-replies     │
+ └────────────────┘              └────────────────────┘
                          │
                 ┌────────▼─────────┐
                 │   MongoDB        │
@@ -58,9 +58,8 @@ Modern frontend interface built with React and Vite:
 
 ### Auth Service
 Handles authentication and user management:
-- **Firebase Google Sign-In** integration
-- Traditional Email/Password signup/login
-- Email OTP based verification (backup)
+- User Email OTP based login
+- Email-based OTP verification (SendGrid/Nodemailer)
 - JWT token generation and validation
 
 ### Service Catalog
@@ -74,17 +73,10 @@ Handles payments and transactions:
 - Stripe Payment Intent creation
 - Webhook handling for payment status updates
 
-### Booking Service
-Handles service bookings and scheduling:
-- Create and manage service bookings
-- Status tracking (Pending, Paid, Cancelled)
-- User booking history
-- Integration with Payment service for automatic updates
-
 ### Contact Service
 Manages user inquiries:
 - Contact form submission
-- Automated email replies via SendGrid
+- Automated email replies
 - Admin notifications
 
 ### Common Modules
@@ -142,17 +134,12 @@ JWT_SECRET=your-super-secret-jwt-key-change-this
 NODE_ENV=development
 ALLOWED_ORIGINS=http://localhost:5173,https://your-production-app.onrender.com
 
-# Email Configuration (SendGrid)
+# Email Configuration (SendGrid or Ethereal)
 EMAIL_HOST=smtp.sendgrid.net
 EMAIL_PORT=587
 EMAIL_USER=apikey
 EMAIL_PASS=your-sendgrid-api-key
-EMAIL_FROM=support@nexom.com
-
-# Firebase Configuration
-FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_CLIENT_EMAIL=your-client-email
-FIREBASE_PRIVATE_KEY="your-private-key"
+EMAIL_FROM=noreply@nexom.com
 ```
 
 **server/service-catalog/.env**:
@@ -277,15 +264,6 @@ Ensure you set the **Root Directory** correctly for each service (e.g., `server/
 | POST | `/api/v1/payments/create-intent` | Create Stripe Payment Intent | ✅ |
 | GET | `/api/v1/payments/status/:id` | Get payment status | ✅ |
 | POST | `/api/v1/payments/webhook` | Stripe Webhook handler | ❌ |
-
-### Booking Service (Port 8085)
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST   | `/api/v1/bookings` | Create a new booking | ✅ |
-| GET    | `/api/v1/bookings/user/:userId` | Get user bookings | ✅ |
-| GET    | `/api/v1/bookings/:id` | Get booking details | ✅ |
-| PATCH  | `/api/v1/bookings/:id` | Update booking status | ✅ |
 
 ### Contact Service (Port 8083)
 

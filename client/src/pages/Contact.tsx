@@ -65,22 +65,25 @@ const Contact: React.FC = () => {
         setIsSubmitting(true);
 
         try {
+            // Include userId if available for B2C history tracking
             const payload = {
                 ...formData,
                 userId: user?.uid || null
             };
 
+            // The service returns the data object containing our notification
             const response = await contactService.submitContactForm(payload);
 
             if (response.status === 200 && response.notification) {
                 const { title, body, referenceId } = response.notification;
 
+                // Render a premium B2C toast window
                 toast.custom((t) => (
                     <motion.div
                         initial={{ opacity: 0, y: 50, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-[#0f172a] dark:bg-slate-900 shadow-2xl rounded-[1.5rem] pointer-events-auto flex flex-col overflow-hidden border border-white/10 ring-1 ring-[#d4af37]/20`}
+                        className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-[#0f172a] shadow-2xl rounded-[1.5rem] pointer-events-auto flex flex-col overflow-hidden border border-white/10 ring-1 ring-[#d4af37]/20`}
                     >
                         <div className="p-6">
                             <div className="flex items-start gap-4">
@@ -120,16 +123,18 @@ const Contact: React.FC = () => {
                     </motion.div>
                 ), { duration: 8000 });
 
+                // Clear form
                 setFormData({ firstName: '', lastName: '', email: '', phone: '', subject: 'General Inquiry', message: '' });
             }
         } catch (error: any) {
-            // Error handled by global interceptor
+            // Error is handled by global interceptor
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleChat = () => {
+        // Open WhatsApp or similar chat service
         const whatsappLink = import.meta.env.VITE_WHATSAPP_LINK;
         if (whatsappLink) {
             window.open(whatsappLink, '_blank');
@@ -137,75 +142,67 @@ const Contact: React.FC = () => {
     };
 
     return (
-        <div className="pt-20 min-h-screen bg-slate-50 dark:bg-[#0f172a] transition-colors duration-300">
+        <div className="pt-20 min-h-screen bg-slate-50">
             {/* Header */}
-            <section className="bg-slate-900 dark:bg-slate-950 text-white py-20 mb-20 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-1/3 h-full bg-[#d4af37]/5 skew-x-12 translate-x-20" />
-                <div className="container mx-auto text-center relative z-10">
-                    <motion.h1
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-4xl md:text-5xl font-bold font-serif mb-6"
-                    >
-                        Get in Touch
-                    </motion.h1>
-                    <p className="text-slate-400 dark:text-slate-500 max-w-2xl mx-auto text-lg">
+            <section className="bg-slate-900 text-white py-20 mb-20">
+                <div className="container mx-auto text-center">
+                    <h1 className="text-4xl md:text-5xl font-bold font-serif mb-6 text-white">Get in Touch</h1>
+                    <p className="text-slate-400 max-w-2xl mx-auto text-lg">
                         We're here to help. Reach out to us for any inquiries, bookings, or feedback.
                     </p>
                 </div>
             </section>
 
-            <section className="py-10 container mx-auto px-4 mb-20">
+            <section className="py-20 container mx-auto px-4 mb-20">
                 <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                     {/* Contact Info */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
-                            <h3 className="text-xl font-bold font-serif mb-6 text-slate-900 dark:text-white">Contact Information</h3>
+                    <div className="lg:col-span-1 space-y-6 mb-20">
+                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                            <h3 className="text-xl font-bold font-serif mb-6 text-slate-900">Contact Information</h3>
                             <div className="space-y-6">
                                 <div className="flex items-start gap-4">
-                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0 text-[#d4af37]">
+                                    <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center flex-shrink-0 text-[#d4af37]">
                                         <Phone className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Call Us</p>
-                                        <p className="font-medium text-slate-900 dark:text-slate-200">+91 9503904221</p>
-                                        <p className="text-sm text-slate-400 dark:text-slate-500">Mon-Fri, 9am - 6pm</p>
+                                        <p className="text-sm text-slate-500 mb-1">Call Us</p>
+                                        <p className="font-medium text-slate-900">+91 9503904221</p>
+                                        <p className="text-sm text-slate-400">Mon-Fri, 9am - 6pm</p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-start gap-4">
-                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0 text-[#d4af37]">
+                                    <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center flex-shrink-0 text-[#d4af37]">
                                         <Mail className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Email Us</p>
-                                        <p className="font-medium text-slate-900 dark:text-slate-200">script.vizz@gmail.com</p>
-                                        <p className="text-sm text-slate-400 dark:text-slate-500">24/7 Support</p>
+                                        <p className="text-sm text-slate-500 mb-1">Email Us</p>
+                                        <p className="font-medium text-slate-900">script.vizz@gmail.com</p>
+                                        <p className="text-sm text-slate-400">24/7 Support</p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-start gap-4">
-                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0 text-[#d4af37]">
+                                    <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center flex-shrink-0 text-[#d4af37]">
                                         <MapPin className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Visit Us</p>
-                                        <p className="font-medium text-slate-900 dark:text-slate-200">Nagpur, Maharastra 440001</p>
-                                        <p className="text-sm text-slate-400 dark:text-slate-500">India</p>
+                                        <p className="text-sm text-slate-500 mb-1">Visit Us</p>
+                                        <p className="font-medium text-slate-900">Nagpur, Maharastra 440001</p>
+                                        <p className="text-sm text-slate-400">India</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-[#d4af37] p-8 rounded-2xl shadow-lg text-white group overflow-hidden relative">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-150" />
-                            <h3 className="text-xl font-bold font-serif mb-4 relative z-10">Need Immediate Help?</h3>
-                            <p className="mb-6 opacity-90 relative z-10">
+                        <div className="bg-[#d4af37] p-8 rounded-2xl shadow-lg text-white">
+                            <h3 className="text-xl font-bold font-serif mb-4">Need Immediate Help?</h3>
+                            <p className="mb-6 opacity-90">
                                 Our support team is available 24/7 to assist you with any urgent cleaning needs.
                             </p>
                             <button
                                 onClick={handleChat}
-                                className="w-full bg-white text-[#d4af37] font-bold py-3 rounded-lg hover:bg-slate-50 transition-all relative z-10 active:scale-95"
+                                className="w-full bg-white text-[#d4af37] font-bold py-3 rounded-lg hover:bg-slate-50 transition-colors"
                             >
                                 Chat with Support
                             </button>
@@ -217,33 +214,33 @@ const Contact: React.FC = () => {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-white dark:bg-slate-800 p-8 md:p-10 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700"
+                            className="bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-slate-100"
                         >
-                            <h3 className="text-2xl font-bold font-serif mb-6 text-slate-900 dark:text-white">Send us a Message</h3>
+                            <h3 className="text-2xl font-bold font-serif mb-6 text-slate-900">Send us a Message</h3>
 
                             <form onSubmit={handleSendMessage} className="space-y-6">
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">First Name</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">First Name</label>
                                         <input
                                             type="text"
                                             name="firstName"
                                             value={formData.firstName}
                                             onChange={handleChange}
                                             required
-                                            className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 outline-none transition-all placeholder:text-slate-400"
+                                            className="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 outline-none transition-all placeholder:text-slate-400"
                                             placeholder="John"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Last Name</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Last Name</label>
                                         <input
                                             type="text"
                                             name="lastName"
                                             value={formData.lastName}
                                             onChange={handleChange}
                                             required
-                                            className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 outline-none transition-all placeholder:text-slate-400"
+                                            className="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 outline-none transition-all placeholder:text-slate-400"
                                             placeholder="Doe"
                                         />
                                     </div>
@@ -251,42 +248,42 @@ const Contact: React.FC = () => {
 
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email Address</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
                                         <input
                                             type="email"
                                             name="email"
                                             value={formData.email}
                                             onChange={handleChange}
                                             required
-                                            className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 outline-none transition-all placeholder:text-slate-400"
+                                            className="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 outline-none transition-all placeholder:text-slate-400"
                                             placeholder="john@example.com"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Phone Number</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Phone Number</label>
                                         <input
                                             type="tel"
                                             name="phone"
                                             value={formData.phone}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 outline-none transition-all placeholder:text-slate-400"
+                                            className="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 outline-none transition-all placeholder:text-slate-400"
                                             placeholder="+91-958323932"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Subject</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Subject</label>
                                     <div className="relative" ref={selectRef}>
                                         <button
                                             type="button"
                                             onClick={() => setIsSelectOpen(!isSelectOpen)}
                                             className={`w-full px-4 py-3.5 rounded-xl border flex items-center justify-between text-left font-medium transition-all duration-200 ${isSelectOpen
-                                                ? 'border-[#d4af37] ring-4 ring-[#d4af37]/10 bg-white dark:bg-slate-900 shadow-lg'
-                                                : 'border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 hover:border-[#d4af37]/50 shadow-sm'
+                                                ? 'border-[#d4af37] ring-4 ring-[#d4af37]/10 bg-white shadow-lg'
+                                                : 'border-slate-200 bg-white hover:border-[#d4af37]/50 shadow-lg'
                                                 }`}
                                         >
-                                            <span className={formData.subject ? 'text-slate-900 dark:text-white' : 'text-slate-400'}>
+                                            <span className={formData.subject ? 'text-slate-900' : 'text-slate-400'}>
                                                 {formData.subject || 'Select a subject'}
                                             </span>
                                             <ChevronDown
@@ -302,7 +299,7 @@ const Contact: React.FC = () => {
                                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                                     transition={{ duration: 0.2, ease: "easeOut" }}
-                                                    className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-white/10 p-2 overflow-hidden ring-1 ring-[#d4af37]/20"
+                                                    className="absolute z-50 w-full mt-2 bg-[#0f172a] rounded-2xl shadow-2xl border border-white/10 p-2 overflow-hidden ring-1 ring-[#d4af37]/20"
                                                 >
                                                     {subjects.map((subject) => (
                                                         <button
@@ -314,7 +311,7 @@ const Contact: React.FC = () => {
                                                             }}
                                                             className={`w-full px-4 py-3 rounded-xl text-left text-sm transition-all flex items-center justify-between group ${formData.subject === subject
                                                                 ? 'bg-[#d4af37]/10 text-[#d4af37] font-bold'
-                                                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 dark:hover:text-white'
+                                                                : 'text-slate-400 hover:bg-white/5 hover:text-white'
                                                                 }`}
                                                         >
                                                             {subject}
@@ -330,14 +327,14 @@ const Contact: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Message</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Message</label>
                                     <textarea
                                         name="message"
                                         value={formData.message}
                                         onChange={handleChange}
                                         required
                                         rows={4}
-                                        className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 outline-none transition-all resize-none placeholder:text-slate-400"
+                                        className="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10 outline-none transition-all resize-none placeholder:text-slate-400"
                                         placeholder="How can we help you?"
                                     ></textarea>
                                 </div>
@@ -345,7 +342,7 @@ const Contact: React.FC = () => {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="btn btn-primary w-full md:w-auto px-8 py-3 rounded-lg flex items-center justify-center gap-2 disabled:opacity-70 dark:bg-[#d4af37] dark:hover:bg-[#b3922d] dark:text-white"
+                                    className="btn btn-primary w-full md:w-auto px-8 py-3 rounded-lg flex items-center justify-center gap-2 disabled:opacity-70"
                                 >
                                     {isSubmitting ? 'Sending...' : 'Send Message'}
                                     {!isSubmitting && <Send className="w-4 h-4" />}

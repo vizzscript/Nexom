@@ -15,10 +15,6 @@ This document chronicles the technical challenges encountered during the develop
 8. [Service Catalog Transformation (Home Cleaning)](#8-service-catalog-transformation-home-cleaning)
 9. [Contact Service & Email Integration](#9-contact-service--email-integration)
 10. [Booking Wizard & UI Enhancements](#10-booking-wizard--ui-enhancements)
-11. [Concurrent Service Execution](#11-concurrent-service-execution)
-12. [Firebase Authentication Migration](#12-firebase-authentication-migration)
-13. [Cross-Service Integration (Payment & Booking)](#13-cross-service-integration-payment--booking)
-14. [Global Error Handling & Toasting](#14-global-error-handling--toasting)
 
 ---
 
@@ -749,55 +745,4 @@ Implemented a root `package.json` in the `server` directory using `concurrently`
 
 ---
 
----
-
-## 12. Firebase Authentication Migration
-
-### Challenge
-Replacing the custom-built Email OTP system with Firebase Authentication to support Google Social Login and more robust Email/Password management, while maintaining the existing JWT-based microservices architecture.
-
-### Solution
-1. **Firebase Admin SDK**: Integrated `firebase-admin` into the `auth-service` to verify Firebase ID tokens.
-2. **Hybrid Auth Flow**:
-   - Client authenticates with Firebase (Google or Email/Password).
-   - Client sends the Firebase ID token to `auth-service/api/v1/auth/firebase-login`.
-   - `auth-service` verifies the token with Firebase, fetches or creates a local user in MongoDB, and generates a local JWT for subsequent microservice requests.
-
-### Lessons Learned
-- Decoupling social authentication (Firebase) from internal authorization (JWT) allows for cleaner microservice communication.
-- Using Firebase Admin SDK on the backend provides a secure way to verify client-side tokens.
-
----
-
-## 13. Cross-Service Integration (Payment & Booking)
-
-### Challenge
-Synchronizing booking status across microservices. When a payment succeeds in the `payment-service`, the `booking-service` needs to be updated immediately to reflect the "Paid" status.
-
-### Solution
-Implemented a webhook notification system:
-- `payment-service` listens for Stripe `payment_intent.succeeded` events.
-- On success, it sends a `PATCH` request to the `booking-service` API to update the specific booking's status.
-
-### Lessons Learned
-- Microservice choreography (one service telling another what to do) is effective for simple flows.
-- For more complex or high-volume flows, a Message Queue (like RabbitMQ) would be preferred to ensure eventual consistency if one service is down.
-
----
-
-## 14. Global Error Handling & Toasting
-
-### Challenge
-Frontend errors (API failures, network issues, JS crashes) were often silent or inconsistent, leading to a poor user experience.
-
-### Solution
-1. **Axios Interceptors**: Added a global response interceptor in `apiClient.ts` to catch 4xx and 5xx errors and trigger a toast notification.
-2. **Window Event Listeners**: Implemented `unhandledrejection` and `error` listeners in the root `App.tsx` or specialized hook to catch unhandled promise rejections and show user-friendly toasts.
-
-### Lessons Learned
-- Centralized error handling significantly reduces the amount of repetitive error-checking code in individual components.
-- Real-time feedback via toasts improves user trust and helps in debugging "in-the-wild" issues.
-
----
-
-*Last Updated: January 16, 2026*
+*Last Updated: January 9, 2026*
