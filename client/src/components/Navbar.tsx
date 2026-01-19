@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, BellDot, Menu, Sparkles, User, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import ThemeToggle from './ThemeToggle';
 
 const Navbar: React.FC = () => {
     const { isAuthenticated } = useAuth();
@@ -48,7 +49,7 @@ const Navbar: React.FC = () => {
     return (
         <nav
             className={`fixed w-full z-50 transition-all duration-300 ${scrolled
-                ? 'bg-white/90 backdrop-blur-md shadow-sm py-4'
+                ? 'bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm py-4'
                 : 'bg-transparent py-6'
                 }`}
         >
@@ -58,7 +59,7 @@ const Navbar: React.FC = () => {
                     <div className="bg-slate-900 p-2 rounded-lg group-hover:bg-slate-800 transition-colors">
                         <Sparkles className="w-6 h-6 text-[#d4af37]" />
                     </div>
-                    <span className={`text-2xl font-bold font-serif tracking-tight ${scrolled ? 'text-slate-900' : 'text-slate-900'}`}>
+                    <span className="text-2xl font-bold font-serif tracking-tight text-slate-900 dark:text-white">
                         Nexom
                     </span>
                 </Link>
@@ -71,23 +72,24 @@ const Navbar: React.FC = () => {
                             to={link.path}
                             className={`text-sm font-medium transition-colors hover:text-[#d4af37] ${location.pathname === link.path
                                 ? 'text-[#d4af37]'
-                                : 'text-slate-600'
+                                : 'text-slate-600 dark:text-slate-300'
                                 }`}
                         >
                             {link.name}
                         </Link>
                     ))}
+                    <ThemeToggle />
                     {isAuthenticated ? (
                         <div className="flex items-center gap-4">
                             <Link
                                 to={ROUTES.NOTIFICATIONS}
-                                className={`relative flex items-center gap-2 transition-all duration-300 hover:scale-110 ${location.pathname === ROUTES.NOTIFICATIONS ? 'text-[#d4af37]' : 'text-slate-600'}`}
+                                className={`relative flex items-center gap-2 transition-all duration-300 hover:scale-110 ${location.pathname === ROUTES.NOTIFICATIONS ? 'text-[#d4af37]' : 'text-slate-600 dark:text-slate-300'}`}
                                 title="Notifications"
                             >
                                 {unreadCount > 0 ? (
                                     <>
                                         <BellDot className="w-6 h-6 text-[#d4af37] animate-pulse" />
-                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white">
+                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white dark:border-slate-900">
                                             {unreadCount}
                                         </span>
                                     </>
@@ -97,7 +99,7 @@ const Navbar: React.FC = () => {
                             </Link>
                             <Link
                                 to={ROUTES.DASHBOARD}
-                                className="flex items-center gap-2 text-slate-600 hover:text-[#d4af37] transition-colors"
+                                className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-[#d4af37] transition-colors"
                             >
                                 <User className="w-6 h-6" />
                             </Link>
@@ -114,7 +116,7 @@ const Navbar: React.FC = () => {
 
                 {/* Mobile Menu Button */}
                 <button
-                    className="md:hidden text-slate-900"
+                    className="md:hidden text-slate-900 dark:text-white"
                     onClick={() => setIsOpen(!isOpen)}
                 >
                     {isOpen ? <X /> : <Menu />}
@@ -128,19 +130,22 @@ const Navbar: React.FC = () => {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="md:hidden bg-white border-t"
+                        className="md:hidden bg-white dark:bg-slate-900 border-t dark:border-slate-700"
                     >
                         <div className="container mx-auto py-4 flex flex-col gap-4">
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.name}
                                     to={link.path}
-                                    className="text-slate-600 font-medium hover:text-[#d4af37] py-2"
+                                    className="text-slate-600 dark:text-slate-300 font-medium hover:text-[#d4af37] py-2"
                                     onClick={() => setIsOpen(false)}
                                 >
                                     {link.name}
                                 </Link>
                             ))}
+                            <div className="flex justify-center py-2">
+                                <ThemeToggle />
+                            </div>
                             {isAuthenticated ? (
                                 <div className="flex flex-col gap-2">
                                     <Link

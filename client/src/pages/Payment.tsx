@@ -18,11 +18,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { ENV_CONFIG } from '@/config/env.config';
 
-// Initialize Stripe with publishable key from config
 const stripePromise = loadStripe(ENV_CONFIG.STRIPE_PUBLISHABLE_KEY);
-
-// Use the Booking type from features/booking/types
-// interface BookingSummary { ... } removed in favor of Booking type
 
 const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle' | 'success') => void }> = ({ booking, onStatusUpdate }) => {
     const stripe = useStripe();
@@ -32,16 +28,17 @@ const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle'
     const [isProcessing, setIsProcessing] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    // Detect dark mode for Stripe CardElement dynamic styling
+    const isDarkMode = document.documentElement.classList.contains('dark');
+
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-
         if (!stripe || !elements) return;
 
         setIsProcessing(true);
         setErrorMessage(null);
 
         try {
-            // 1. Fetch the clientSecret from your backend
             const response = await axios.post(`${ENV_CONFIG.PAYMENT_SERVICE_URL}/create-intent`, {
                 amount: booking.service.price,
                 bookingId: booking.id,
@@ -52,7 +49,6 @@ const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle'
 
             const { clientSecret } = response.data;
 
-            // 2. Confirm the payment with Stripe
             const result = await stripe.confirmCardPayment(clientSecret, {
                 payment_method: {
                     card: elements.getElement(CardElement)!,
@@ -64,31 +60,22 @@ const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle'
             });
 
             if (result.error) {
-                // Show error to your customer (e.g., insufficient funds)
                 setErrorMessage(result.error.message || 'Payment failed. Please try again.');
                 setIsProcessing(false);
                 return;
             }
 
             if (result.paymentIntent.status === 'succeeded') {
-                // 3. Update database on success
                 try {
                     await bookingService.updateBooking(booking.id, { status: 'Paid' });
                 } catch (updateError) {
-                    console.error('Failed to update booking status in DB, but payment succeeded:', updateError);
-                    // We still show success to user because payment was successful
+                    console.error('Update Error:', updateError);
                 }
-
                 onStatusUpdate('success');
-
-                // Redirect after a short delay to show success state
-                setTimeout(() => {
-                    navigate(ROUTES.DASHBOARD);
-                }, 3000);
+                setTimeout(() => navigate(ROUTES.DASHBOARD), 3000);
             }
         } catch (err: any) {
-            setErrorMessage(err.message || 'An unexpected error occurred. Please try again.');
-            console.error('Payment Error:', err);
+            setErrorMessage(err.message || 'An unexpected error occurred.');
         } finally {
             setIsProcessing(false);
         }
@@ -96,8 +83,8 @@ const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle'
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="p-5 rounded-2xl border border-slate-200 bg-white shadow-sm transition-all focus-within:border-[#d4af37] focus-within:ring-1 focus-within:ring-[#d4af37]/20">
-                <label className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
+            <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm transition-all focus-within:border-[#d4af37] focus-within:ring-1 focus-within:ring-[#d4af37]/20">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
                     <Lock className="w-4 h-4 text-[#d4af37]" /> Card Information
                 </label>
                 <div className="py-2">
@@ -107,9 +94,9 @@ const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle'
                             style: {
                                 base: {
                                     fontSize: '16px',
-                                    color: '#1e293b',
+                                    color: isDarkMode ? '#f8fafc' : '#1e293b',
                                     fontFamily: 'Inter, system-ui, sans-serif',
-                                    '::placeholder': { color: '#94a3b8' },
+                                    '::placeholder': { color: isDarkMode ? '#475569' : '#94a3b8' },
                                     iconColor: '#d4af37',
                                 },
                                 invalid: {
@@ -126,9 +113,9 @@ const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle'
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-4 rounded-xl bg-red-50 text-red-600 text-sm border border-red-100 flex items-start gap-3"
+                    className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm border border-red-100 dark:border-red-900/30 flex items-start gap-3"
                 >
-                    <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-5 h-5 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center shrink-0 mt-0.5">
                         <span className="font-bold">!</span>
                     </div>
                     {errorMessage}
@@ -154,12 +141,11 @@ const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle'
             </button>
 
             <div className="flex flex-col items-center gap-4">
-                <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
+                <div className="flex items-center justify-center gap-2 text-xs text-slate-400 dark:text-slate-500">
                     <ShieldCheck className="w-4 h-4 text-green-500" />
                     <span>Encrypted & Secure Payment via Stripe</span>
                 </div>
-
-                <div className="flex gap-4 opacity-50 grayscale hover:grayscale-0 transition-all">
+                <div className="flex gap-4 opacity-50 grayscale hover:grayscale-0 transition-all dark:invert">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-4" />
                     <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6" />
                 </div>
@@ -171,13 +157,6 @@ const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle'
 const PaymentPage: React.FC = () => {
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
-
-    useEffect(() => {
-        if (!isAuthenticated) {
-            navigate(ROUTES.LOGIN);
-        }
-    }, [isAuthenticated, navigate]);
-
     const location = useLocation();
     const query = new URLSearchParams(location.search);
     const bookingId = query.get('bookingId');
@@ -187,53 +166,53 @@ const PaymentPage: React.FC = () => {
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success'>('idle');
 
     useEffect(() => {
+        if (!isAuthenticated) navigate(ROUTES.LOGIN);
+    }, [isAuthenticated, navigate]);
+
+    useEffect(() => {
         if (!bookingId) {
             navigate(ROUTES.DASHBOARD);
             return;
         }
-
         const fetchBooking = async () => {
             try {
                 setLoading(true);
                 const data = await bookingService.getBookingById(bookingId);
                 setBooking(data);
             } catch (error) {
-                console.error('Failed to fetch booking:', error);
                 navigate(ROUTES.DASHBOARD);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchBooking();
     }, [bookingId, navigate]);
 
     if (loading || !booking) {
         return (
-            <div className="min-h-screen pt-24 flex flex-col items-center justify-center bg-[#f8fafc]">
+            <div className="min-h-screen pt-24 flex flex-col items-center justify-center bg-slate-50 dark:bg-[#0f172a]">
                 <div className="w-12 h-12 border-4 border-[#d4af37]/20 border-t-[#d4af37] rounded-full animate-spin mb-4" />
-                <p className="text-xl text-slate-700">Loading booking details...</p>
+                <p className="text-xl text-slate-700 dark:text-slate-300">Loading booking details...</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen pt-24 pb-12 bg-[#f8fafc] px-4 relative overflow-hidden">
+        <div className="min-h-screen pt-24 pb-12 bg-slate-50 dark:bg-[#0f172a] px-4 relative overflow-hidden transition-colors duration-300">
             {/* Background elements */}
-            <div className="absolute top-0 right-0 w-1/2 h-full bg-slate-50/50 -skew-x-12 translate-x-1/4 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#d4af37]/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-1/2 h-full bg-slate-100/30 dark:bg-white/5 -skew-x-12 translate-x-1/4 pointer-events-none" />
 
             <div className="container mx-auto max-w-2xl relative z-10">
                 <button
                     onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-slate-500 hover:text-[#d4af37] transition-colors mb-8 group"
+                    className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-[#d4af37] transition-colors mb-8 group"
                 >
                     <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                     <span className="font-medium">Back to Booking</span>
                 </button>
 
-                <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-                    <div className="p-10 bg-slate-900 text-white relative">
+                <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-100 dark:border-slate-700 overflow-hidden">
+                    <div className="p-10 bg-slate-900 dark:bg-slate-950 text-white relative">
                         <div className="absolute top-0 right-0 p-8 opacity-10">
                             <CreditCard className="w-24 h-24 rotate-12" />
                         </div>
@@ -242,35 +221,34 @@ const PaymentPage: React.FC = () => {
                     </div>
 
                     <div className="p-10">
-                        <div className="flex justify-between items-end mb-10 pb-8 border-b border-slate-100">
+                        <div className="flex justify-between items-end mb-10 pb-8 border-b border-slate-100 dark:border-slate-700">
                             <div>
                                 <p className="text-xs font-bold text-[#d4af37] uppercase tracking-wider mb-2">Total Amount</p>
-                                <p className="text-4xl font-bold text-slate-900">{formatCurrency(booking.service?.price)}</p>
+                                <p className="text-4xl font-bold text-slate-900 dark:text-white">{formatCurrency(booking.service?.price)}</p>
                             </div>
-                            <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
+                            <div className="bg-slate-50 dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-700">
                                 <CreditCard className="w-10 h-10 text-[#d4af37]" />
                             </div>
                         </div>
 
                         <div className="space-y-8">
-                            <div className="p-6 rounded-3xl border border-slate-100 bg-slate-50/50 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-white/50 rounded-full -translate-y-1/2 translate-x-1/2" />
-                                <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                    <ShieldCheck className="w-5 h-5 text-green-600" />
+                            <div className="p-6 rounded-3xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 relative overflow-hidden">
+                                <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <ShieldCheck className="w-5 h-5 text-green-600 dark:text-green-500" />
                                     Booking Summary
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div>
-                                        <p className="text-slate-500 mb-1">Service</p>
-                                        <p className="font-semibold text-slate-800">{booking.service?.title}</p>
+                                        <p className="text-slate-500 dark:text-slate-400 mb-1">Service</p>
+                                        <p className="font-semibold text-slate-800 dark:text-slate-200">{booking.service?.title}</p>
                                     </div>
                                     <div>
-                                        <p className="text-slate-500 mb-1">Schedule</p>
-                                        <p className="font-semibold text-slate-800">{booking.date} @ {booking.time}</p>
+                                        <p className="text-slate-500 dark:text-slate-400 mb-1">Schedule</p>
+                                        <p className="font-semibold text-slate-800 dark:text-slate-200">{booking.date} @ {booking.time}</p>
                                     </div>
                                     <div className="col-span-2">
-                                        <p className="text-slate-500 mb-1">Location</p>
-                                        <p className="font-semibold text-slate-800 line-clamp-1">{booking.details.address}</p>
+                                        <p className="text-slate-500 dark:text-slate-400 mb-1">Location</p>
+                                        <p className="font-semibold text-slate-800 dark:text-slate-200 line-clamp-1">{booking.details.address}</p>
                                     </div>
                                 </div>
                             </div>
@@ -282,7 +260,6 @@ const PaymentPage: React.FC = () => {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, scale: 0.95 }}
-                                        transition={{ duration: 0.4 }}
                                     >
                                         <Elements stripe={stripePromise}>
                                             <CheckoutForm booking={booking} onStatusUpdate={setPaymentStatus} />
@@ -300,7 +277,7 @@ const PaymentPage: React.FC = () => {
                                                 initial={{ scale: 0 }}
                                                 animate={{ scale: 1 }}
                                                 transition={{ type: "spring", damping: 12 }}
-                                                className="absolute inset-0 bg-green-100 rounded-full"
+                                                className="absolute inset-0 bg-green-100 dark:bg-green-900/20 rounded-full"
                                             />
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.5 }}
@@ -311,9 +288,9 @@ const PaymentPage: React.FC = () => {
                                                 <CheckCircle2 className="w-16 h-16 text-green-500" />
                                             </motion.div>
                                         </div>
-                                        <h2 className="text-3xl font-bold text-slate-900 mb-3 font-serif">Payment Successful!</h2>
-                                        <p className="text-slate-500 mb-8">Your booking has been confirmed. We've sent a receipt to your email.</p>
-                                        <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden max-w-xs mx-auto">
+                                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3 font-serif">Payment Successful!</h2>
+                                        <p className="text-slate-500 dark:text-slate-400 mb-8">Your booking has been confirmed. We've sent a receipt to your email.</p>
+                                        <div className="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden max-w-xs mx-auto">
                                             <motion.div
                                                 initial={{ width: 0 }}
                                                 animate={{ width: "100%" }}
@@ -321,7 +298,6 @@ const PaymentPage: React.FC = () => {
                                                 className="h-full bg-[#d4af37]"
                                             />
                                         </div>
-                                        <p className="text-xs text-slate-400 mt-4">Redirecting to dashboard...</p>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
