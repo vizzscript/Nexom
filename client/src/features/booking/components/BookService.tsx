@@ -7,6 +7,7 @@ import { formatCurrency } from '@/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Calendar, Check, CheckCircle, Clock, Home, Loader2, MapPin, Shield, Star, User } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
+import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
 // ====================================================================
@@ -99,6 +100,11 @@ const BookService: React.FC = () => {
         if (step === 3) {
             if (!user?.uid) {
                 navigate(ROUTES.LOGIN);
+                return;
+            }
+
+            if (!formData.details || !formData.details.phone || !formData.details.address) {
+                toast.error('Please enter your phone number and address');
                 return;
             }
 
@@ -362,6 +368,7 @@ const BookService: React.FC = () => {
                                                                 onChange={updateDetails}
                                                                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent dark:text-white focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none"
                                                                 placeholder="+91 98765 43210"
+                                                                required
                                                             />
                                                         </div>
                                                     </div>
@@ -376,6 +383,7 @@ const BookService: React.FC = () => {
                                                                 onChange={updateDetails}
                                                                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent dark:text-white focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none"
                                                                 placeholder="123 Clean Street"
+                                                                required
                                                             />
                                                         </div>
                                                     </div>
@@ -387,6 +395,7 @@ const BookService: React.FC = () => {
                                                             onChange={updateDetails}
                                                             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent dark:text-white focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none h-32 resize-none"
                                                             placeholder="Instructions..."
+                                                            required
                                                         />
                                                     </div>
                                                 </div>
