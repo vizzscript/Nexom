@@ -1,16 +1,14 @@
 import express, { Router } from 'express';
 import * as paymentController from '../controllers/payment.controller';
-import { validatePaymentIntent } from '../middleware/validation.middleware';
+import { validateCreateOrder } from '../middleware/validation.middleware';
 
 const router = Router();
 
-// Webhook needs raw body
-router.post('/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
-
-// Other routes use JSON
 router.use(express.json());
 
-router.post('/create-intent', validatePaymentIntent, paymentController.createPaymentIntent);
-router.get('/status/:paymentIntentId', paymentController.getPaymentStatus);
+// Routes
+router.post('/create-order', validateCreateOrder, paymentController.createOrder); // Formerly create-intent
+router.post('/verify-payment', paymentController.verifyPayment);
+router.get('/status/:orderId', paymentController.getPaymentStatus);
 
 export default router;

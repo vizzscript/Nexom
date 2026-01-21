@@ -2,7 +2,9 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IPayment extends Document {
     bookingId: string;
-    stripePaymentIntentId: string;
+    razorpayOrderId: string;
+    razorpayPaymentId?: string;
+    razorpaySignature?: string;
     amount: number;
     currency: string;
     status: 'pending' | 'succeeded' | 'failed' | 'refunded';
@@ -14,7 +16,9 @@ export interface IPayment extends Document {
 const PaymentSchema: Schema = new Schema(
     {
         bookingId: { type: String, required: true },
-        stripePaymentIntentId: { type: String, required: true, unique: true },
+        razorpayOrderId: { type: String, required: true, unique: true },
+        razorpayPaymentId: { type: String },
+        razorpaySignature: { type: String },
         amount: { type: Number, required: true },
         currency: { type: String, default: 'inr' },
         status: {

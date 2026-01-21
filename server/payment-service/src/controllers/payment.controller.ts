@@ -1,140 +1,123 @@
+import axios from 'axios';
+import crypto from 'crypto';
 import { Request, Response } from 'express';
-import Stripe from 'stripe';
-import { stripe } from '../config/stripe';
+import { razorpay } from '../config/razorpay';
 import Payment from '../models/payment.model';
 
-export const createPaymentIntent = async (req: Request, res: Response) => {
+export const createOrder = async (req: Request, res: Response) => {
     try {
-        const { amount, bookingId, currency = 'inr', customerEmail, serviceTitle } = req.body;
+        const { amount, bookingId, currency = 'INR', customerEmail, serviceTitle } = req.body;
 
         if (!amount || !bookingId) {
             return res.status(400).json({ error: 'Amount and bookingId are required' });
         }
 
-        // Create Stripe Payment Intent
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(amount * 100), // Stripe expects amount in cents/paise
-            currency: currency,
-            metadata: {
+        const options = {
+            amount: Math.round(amount * 100), // Razorpay expects amount in paise
+            currency: currency.toUpperCase(),
+            receipt: `receipt_${bookingId}`,
+            notes: {
                 bookingId: bookingId.toString(),
                 serviceTitle: serviceTitle || 'Nexom Service',
+                customerEmail: customerEmail || '',
             },
-            automatic_payment_methods: {
-                enabled: true,
-            },
-            receipt_email: customerEmail,
-        });
+        };
 
-        // Save initial payment record to database
+        const order = await razorpay.orders.create(options);
+
+        if (!order) {
+            return res.status(500).json({ error: 'Failed to create Razorpay order' });
+        }
+
         await Payment.create({
             bookingId: bookingId.toString(),
-            stripePaymentIntentId: paymentIntent.id,
+            razorpayOrderId: order.id,
             amount: amount,
             currency: currency,
             status: 'pending',
             customerEmail: customerEmail,
         });
 
-        console.log(`Payment Intent created: ${paymentIntent.id} for Booking: ${bookingId}`);
-
         res.status(200).json({
-            clientSecret: paymentIntent.client_secret,
-            paymentIntentId: paymentIntent.id,
+            orderId: order.id,
+            amount: order.amount,
+            currency: order.currency,
+            keyId: process.env.RAZORPAY_KEY_ID
         });
+
     } catch (error: any) {
-        console.error('Create Payment Intent Error:', error);
-        res.status(500).json({
-            error: 'Failed to initialize payment',
-            message: error.message
-        });
+        console.error('Create Order Error:', error);
+        res.status(500).json({ error: 'Initialization failed', message: error.message });
     }
 };
 
-export const handleWebhook = async (req: Request, res: Response) => {
-    const sig = req.headers['stripe-signature'];
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-    if (!sig && process.env.NODE_ENV === 'production') {
-        return res.status(400).send('Webhook Error: Missing stripe-signature header');
-    }
-
-    let event: Stripe.Event;
-
+export const verifyPayment = async (req: Request, res: Response) => {
     try {
-        if (webhookSecret && sig) {
-            event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-        } else {
-            // Fallback for development if secret is not set
-            console.warn('Webhook signature verification skipped. Use STRIPE_WEBHOOK_SECRET in production.');
-            event = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            return res.status(400).json({ error: 'Missing payment verification details' });
         }
-    } catch (err: any) {
-        console.error(`Webhook Error: ${err.message}`);
-        return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
 
-    // Handle the event
-    try {
-        switch (event.type) {
-            case 'payment_intent.succeeded': {
-                const paymentIntent = event.data.object as Stripe.PaymentIntent;
-                console.log(`Payment succeeded: ${paymentIntent.id} for ${paymentIntent.amount / 100} ${paymentIntent.currency.toUpperCase()}`);
+        const body = razorpay_order_id + "|" + razorpay_payment_id;
 
-                // Update payment status in database
-                const updatedPayment = await Payment.findOneAndUpdate(
-                    { stripePaymentIntentId: paymentIntent.id },
-                    { status: 'succeeded' },
-                    { new: true }
-                );
+        const expectedSignature = crypto
+            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
+            .update(body.toString())
+            .digest("hex");
 
-                if (updatedPayment) {
-                    console.log(`Database updated for payment: ${paymentIntent.id}`);
-                    try {
-                        const bookingId = updatedPayment.bookingId;
-                        const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:8085';
-                        const axios = require('axios');
-                        await axios.patch(`${BOOKING_SERVICE_URL}/api/v1/bookings/${bookingId}`, {
-                            status: 'Paid'
-                        });
-                        console.log(`Booking Service notified for Booking: ${bookingId}`);
-                    } catch (notifyError: any) {
-                        console.error(`Failed to notify Booking Service: ${notifyError.message}`);
-                    }
+        const isAuthentic = expectedSignature === razorpay_signature;
+
+        if (isAuthentic) {
+            // Update payment status
+            const updatedPayment = await Payment.findOneAndUpdate(
+                { razorpayOrderId: razorpay_order_id },
+                {
+                    status: 'succeeded',
+                    razorpayPaymentId: razorpay_payment_id,
+                    razorpaySignature: razorpay_signature
+                },
+                { new: true }
+            );
+
+            if (updatedPayment) {
+                console.log(`Database updated for payment order: ${razorpay_order_id}`);
+
+                // Notify Booking Service
+                try {
+                    const bookingId = updatedPayment.bookingId;
+                    const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:8085';
+
+                    await axios.patch(`${BOOKING_SERVICE_URL}/api/v1/bookings/${bookingId}`, {
+                        status: 'Paid'
+                    });
+                    console.log(`Booking Service notified for Booking: ${bookingId}`);
+                } catch (notifyError: any) {
+                    console.error(`Failed to notify Booking Service: ${notifyError.message}`);
+                    // We don't fail the response here, but we should log it
                 }
-                break;
             }
-            case 'payment_intent.payment_failed': {
-                const paymentIntent = event.data.object as Stripe.PaymentIntent;
-                const errorMessage = paymentIntent.last_payment_error?.message || 'Unknown error';
-                console.log(`Payment failed: ${paymentIntent.id}. Error: ${errorMessage}`);
 
-                await Payment.findOneAndUpdate(
-                    { stripePaymentIntentId: paymentIntent.id },
-                    { status: 'failed' }
-                );
-                break;
-            }
-            case 'payment_intent.processing': {
-                const paymentIntent = event.data.object as Stripe.PaymentIntent;
-                console.log(`Payment processing: ${paymentIntent.id}`);
-                break;
-            }
-            default:
-                console.log(`Unhandled event type ${event.type}`);
+            res.status(200).json({ success: true, message: "Payment verified successfully" });
+        } else {
+            // Payment failed verification
+            await Payment.findOneAndUpdate(
+                { razorpayOrderId: razorpay_order_id },
+                { status: 'failed' }
+            );
+            res.status(400).json({ success: false, error: "Invalid signature" });
         }
-    } catch (dbError: any) {
-        console.error(`Database Update Error during webhook: ${dbError.message}`);
-        // We still return 200 to Stripe to avoid retries if the event was received but DB update failed
-        // In a real app, we might want to return 500 if we want Stripe to retry
-    }
 
-    res.json({ received: true });
+    } catch (error: any) {
+        console.error('Verify Payment Error:', error);
+        res.status(500).json({ error: 'Verification failed', message: error.message });
+    }
 };
 
 export const getPaymentStatus = async (req: Request, res: Response) => {
     try {
-        const { paymentIntentId } = req.params;
-        const payment = await Payment.findOne({ stripePaymentIntentId: paymentIntentId });
+        const { orderId } = req.params;
+        const payment = await Payment.findOne({ razorpayOrderId: orderId });
 
         if (!payment) {
             return res.status(404).json({ error: 'Payment not found' });
