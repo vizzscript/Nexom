@@ -3,159 +3,32 @@ import { useAuth } from '@/features/auth';
 import { bookingService } from '@/features/booking/services/booking.service';
 import type { Booking } from '@/features/booking/types';
 import { formatCurrency } from '@/utils';
-import {
-    CardElement,
-    Elements,
-    useElements,
-    useStripe,
-} from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, CreditCard, Lock, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, CreditCard, ShieldCheck } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { ENV_CONFIG } from '@/config/env.config';
 
-const stripePromise = loadStripe(ENV_CONFIG.STRIPE_PUBLISHABLE_KEY);
+declare global {
+    interface Window {
+        Razorpay: any;
+    }
+}
 
-const CheckoutForm: React.FC<{ booking: Booking; onStatusUpdate: (status: 'idle' | 'success') => void }> = ({ booking, onStatusUpdate }) => {
-    const stripe = useStripe();
-    const elements = useElements();
-    const navigate = useNavigate();
-
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-    // Detect dark mode for Stripe CardElement dynamic styling
-    const isDarkMode = document.documentElement.classList.contains('dark');
-
-    const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault();
-        if (!stripe || !elements) return;
-
-        setIsProcessing(true);
-        setErrorMessage(null);
-
-        try {
-            const response = await axios.post(`${ENV_CONFIG.PAYMENT_SERVICE_URL}/create-intent`, {
-                amount: booking.service.price,
-                bookingId: booking.id,
-                currency: 'inr',
-                customerEmail: 'customer@example.com',
-                serviceTitle: booking.service.title
-            });
-
-            const { clientSecret } = response.data;
-
-            const result = await stripe.confirmCardPayment(clientSecret, {
-                payment_method: {
-                    card: elements.getElement(CardElement)!,
-                    billing_details: {
-                        name: 'Customer',
-                        phone: booking.details.phone,
-                    },
-                }
-            });
-
-            if (result.error) {
-                setErrorMessage(result.error.message || 'Payment failed. Please try again.');
-                setIsProcessing(false);
-                return;
-            }
-
-            if (result.paymentIntent.status === 'succeeded') {
-                try {
-                    await bookingService.updateBooking(booking.id, { status: 'Paid' });
-                } catch (updateError) {
-                    console.error('Update Error:', updateError);
-                }
-                onStatusUpdate('success');
-                setTimeout(() => navigate(ROUTES.DASHBOARD), 3000);
-            }
-        } catch (err: any) {
-            setErrorMessage(err.message || 'An unexpected error occurred.');
-        } finally {
-            setIsProcessing(false);
-        }
-    };
-
-    return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm transition-all focus-within:border-[#d4af37] focus-within:ring-1 focus-within:ring-[#d4af37]/20">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-[#d4af37]" /> Card Information
-                </label>
-                <div className="py-2">
-                    <CardElement
-                        options={{
-                            hidePostalCode: true,
-                            style: {
-                                base: {
-                                    fontSize: '16px',
-                                    color: isDarkMode ? '#f8fafc' : '#1e293b',
-                                    fontFamily: 'Inter, system-ui, sans-serif',
-                                    '::placeholder': { color: isDarkMode ? '#475569' : '#94a3b8' },
-                                    iconColor: '#d4af37',
-                                },
-                                invalid: {
-                                    color: '#ef4444',
-                                    iconColor: '#ef4444',
-                                },
-                            },
-                        }}
-                    />
-                </div>
-            </div>
-
-            {errorMessage && (
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm border border-red-100 dark:border-red-900/30 flex items-start gap-3"
-                >
-                    <div className="w-5 h-5 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center shrink-0 mt-0.5">
-                        <span className="font-bold">!</span>
-                    </div>
-                    {errorMessage}
-                </motion.div>
-            )}
-
-            <button
-                type="submit"
-                disabled={!stripe || isProcessing}
-                className="w-full relative overflow-hidden btn btn-primary bg-[#d4af37] text-white py-4 rounded-2xl shadow-lg hover:shadow-xl hover:bg-[#b5952f] transition-all flex items-center justify-center gap-3 font-bold text-lg disabled:opacity-70 disabled:cursor-not-allowed group"
-            >
-                {isProcessing ? (
-                    <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Processing Payment...</span>
-                    </>
-                ) : (
-                    <>
-                        <span>Pay {formatCurrency(booking.service?.price)}</span>
-                        <ArrowLeft className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform" />
-                    </>
-                )}
-            </button>
-
-            <div className="flex flex-col items-center gap-4">
-                <div className="flex items-center justify-center gap-2 text-xs text-slate-400 dark:text-slate-500">
-                    <ShieldCheck className="w-4 h-4 text-green-500" />
-                    <span>Encrypted & Secure Payment via Stripe</span>
-                </div>
-                <div className="flex gap-4 opacity-50 grayscale hover:grayscale-0 transition-all dark:invert">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-4" />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6" />
-                </div>
-            </div>
-        </form>
-    );
+const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+    });
 };
 
 const PaymentPage: React.FC = () => {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const query = new URLSearchParams(location.search);
@@ -164,6 +37,8 @@ const PaymentPage: React.FC = () => {
     const [booking, setBooking] = useState<Booking | null>(null);
     const [loading, setLoading] = useState(true);
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success'>('idle');
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
         if (!isAuthenticated) navigate(ROUTES.LOGIN);
@@ -187,6 +62,90 @@ const PaymentPage: React.FC = () => {
         };
         fetchBooking();
     }, [bookingId, navigate]);
+
+    const handlePayment = async () => {
+        if (!booking) return;
+        setIsProcessing(true);
+        setErrorMessage(null);
+
+        try {
+            const isLoaded = await loadRazorpayScript();
+            if (!isLoaded) {
+                throw new Error('Razorpay SDK failed to load. Please check your connection.');
+            }
+
+            // 1. Create Order
+            const { data: orderData } = await axios.post(`${ENV_CONFIG.PAYMENT_SERVICE_URL}/create-order`, {
+                amount: booking.service.price,
+                bookingId: booking.id,
+                currency: 'INR',
+                customerEmail: user?.email || 'customer@example.com',
+                serviceTitle: booking.service.title
+            });
+
+            if (!orderData || !orderData.orderId) {
+                throw new Error('Failed to create order');
+            }
+
+            // 2. Open Razorpay
+            const options = {
+                key: orderData.keyId,
+                amount: orderData.amount,
+                currency: orderData.currency,
+                name: "Nexom Services",
+                description: `Payment for ${booking.service.title}`,
+                // image: "YOUR_LOGO_URL", // Optional
+                order_id: orderData.orderId,
+                handler: async function (response: any) {
+                    try {
+                        // 3. Verify Payment
+                        const verifyRes = await axios.post(`${ENV_CONFIG.PAYMENT_SERVICE_URL}/verify-payment`, {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                        });
+
+                        if (verifyRes.data.success) {
+                            setPaymentStatus('success');
+                            setTimeout(() => navigate(ROUTES.DASHBOARD), 3000);
+                        } else {
+                            throw new Error('Payment verification failed');
+                        }
+                    } catch (verifyError: any) {
+                        setErrorMessage(verifyError.message || 'Payment Verification Failed');
+                    }
+                },
+                prefill: {
+                    name: user?.displayName || 'Customer',
+                    email: user?.email || 'customer@example.com',
+                    contact: booking.details.phone,
+                },
+                notes: {
+                    address: booking.details.address,
+                },
+                theme: {
+                    color: "#d4af37",
+                },
+                modal: {
+                    ondismiss: function () {
+                        setIsProcessing(false);
+                    }
+                }
+            };
+
+            const rzp1 = new window.Razorpay(options);
+            rzp1.on('payment.failed', function (response: any) {
+                setErrorMessage(response.error.description);
+                setIsProcessing(false);
+            });
+            rzp1.open();
+
+        } catch (error: any) {
+            setErrorMessage(error.message || 'Payment initialization failed');
+            setIsProcessing(false);
+        }
+    };
+
 
     if (loading || !booking) {
         return (
@@ -256,14 +215,42 @@ const PaymentPage: React.FC = () => {
                             <AnimatePresence mode="wait">
                                 {paymentStatus === 'idle' ? (
                                     <motion.div
-                                        key="payment-form"
+                                        key="payment-action"
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, scale: 0.95 }}
+                                        className="space-y-4"
                                     >
-                                        <Elements stripe={stripePromise}>
-                                            <CheckoutForm booking={booking} onStatusUpdate={setPaymentStatus} />
-                                        </Elements>
+                                        {errorMessage && (
+                                            <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm border border-red-100 dark:border-red-900/30 flex items-start gap-3">
+                                                <span className="font-bold">!</span>
+                                                {errorMessage}
+                                            </div>
+                                        )}
+
+                                        <button
+                                            onClick={handlePayment}
+                                            disabled={isProcessing}
+                                            className="w-full relative overflow-hidden btn btn-primary bg-[#d4af37] text-white py-4 rounded-2xl shadow-lg hover:shadow-xl hover:bg-[#b5952f] transition-all flex items-center justify-center gap-3 font-bold text-lg disabled:opacity-70 disabled:cursor-not-allowed group"
+                                        >
+                                            {isProcessing ? (
+                                                <>
+                                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                    <span>Processing...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span>Pay Now</span>
+                                                    <ArrowLeft className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform" />
+                                                </>
+                                            )}
+                                        </button>
+                                        <div className="flex flex-col items-center gap-4 mt-4">
+                                            <div className="flex items-center justify-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+                                                <ShieldCheck className="w-4 h-4 text-green-500" />
+                                                <span>Secured by Razorpay via Standard Checkout</span>
+                                            </div>
+                                        </div>
                                     </motion.div>
                                 ) : (
                                     <motion.div

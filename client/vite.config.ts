@@ -17,7 +17,7 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           ui: ['framer-motion', 'lucide-react'],
-          stripe: ['@stripe/react-stripe-js', '@stripe/stripe-js'],
+          // stripe chunk removed
         },
       },
     },
