@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 
-export const validatePaymentIntent = (req: Request, res: Response, next: NextFunction) => {
+export const validateCreateOrder = (req: Request, res: Response, next: NextFunction) => {
     const { amount, bookingId } = req.body;
 
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
