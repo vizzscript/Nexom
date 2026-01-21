@@ -21,12 +21,38 @@ export const bookingService = {
     },
 
     getUserBookings: async (userId: string): Promise<Booking[]> => {
-        const response = await axios.get(`${API_URL}/user/${userId}`, getAuthHeaders());
+        const baseConfig = getAuthHeaders();
+        const response = await axios.get(`${API_URL}/user/${userId}`, {
+            ...baseConfig,
+            headers: {
+                ...baseConfig.headers,
+                // These headers tell browsers and proxies (like Vercel/Cloudflare) not to cache this request
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            },
+            params: {
+                // This "cache buster" param ensures the URL is unique every time, forcing a network request
+                _t: new Date().getTime()
+            }
+        });
         return Array.isArray(response.data.data) ? response.data.data : [];
     },
 
     getBookingById: async (id: string): Promise<Booking> => {
-        const response = await axios.get(`${API_URL}/${id}`, getAuthHeaders());
+        const baseConfig = getAuthHeaders();
+        const response = await axios.get(`${API_URL}/${id}`, {
+            ...baseConfig,
+            headers: {
+                ...baseConfig.headers,
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            },
+            params: {
+                _t: new Date().getTime()
+            }
+        });
         return response.data.data;
     },
 
