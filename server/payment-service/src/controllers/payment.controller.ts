@@ -86,7 +86,7 @@ export const verifyPayment = async (req: Request, res: Response) => {
                 // Notify Booking Service
                 try {
                     const bookingId = updatedPayment.bookingId;
-                    const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://localhost:8085';
+                    const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL;
 
                     await axios.patch(`${BOOKING_SERVICE_URL}/api/v1/bookings/${bookingId}`, {
                         status: 'Paid'
