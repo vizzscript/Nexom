@@ -128,3 +128,48 @@ export const getPaymentStatus = async (req: Request, res: Response) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+export const refundPayment = async (req: Request, res: Response) => {
+    try {
+        const { bookingId } = req.body;
+
+        if (!bookingId) {
+            return res.status(400).json({ error: 'Booking ID is required' });
+        }
+
+        const payment = await Payment.findOne({ bookingId, status: 'succeeded' });
+
+        if (!payment) {
+            return res.status(404).json({ error: 'Payment not found or not eligible for refund' });
+        }
+
+        if (!payment.razorpayPaymentId) {
+            return res.status(400).json({ error: 'Razorpay Payment ID missing for this payment' });
+        }
+
+        try {
+            const refund = await razorpay.payments.refund(payment.razorpayPaymentId, {
+                speed: 'normal'
+            });
+
+            if (refund && refund.id) {
+                // Update payment status
+                await Payment.findOneAndUpdate(
+                    { bookingId },
+                    { status: 'refunded' },
+                    { new: true }
+                );
+                return res.status(200).json({ success: true, message: 'Refund initiated successfully', data: refund });
+            } else {
+                return res.status(500).json({ success: false, message: 'Failed to initiate refund with Razorpay' });
+            }
+        } catch (razorpayError: any) {
+            console.error('Razorpay Refund Error:', razorpayError);
+            return res.status(500).json({ success: false, message: razorpayError.error?.description || razorpayError.message || 'Razorpay refund failed' });
+        }
+
+    } catch (error: any) {
+        console.error('Refund Error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

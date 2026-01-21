@@ -134,10 +134,10 @@ const Dashboard: React.FC = () => {
                                         <div className="flex flex-col items-end gap-4 w-full md:w-auto">
                                             <div className="flex items-center gap-4">
                                                 <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${booking.status === 'Paid' || booking.status === 'Confirmed'
-                                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
-                                                        booking.status === 'Pending Payment'
-                                                            ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
-                                                            'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                                                    booking.status === 'Pending Payment'
+                                                        ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
+                                                        'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
                                                     }`}>
                                                     {booking.status}
                                                 </span>
@@ -240,6 +240,9 @@ const Dashboard: React.FC = () => {
                         <p className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Are you sure?</p>
                         <p className="text-slate-500 dark:text-slate-400">
                             Are you sure you want to cancel this booking? This action cannot be undone and your slot will be released.
+                        </p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 italic">
+                            Your amount will be refunded within 5-7 working days.
                         </p>
                     </div>
                 </Modal>
