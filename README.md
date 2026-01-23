@@ -33,11 +33,11 @@ Nexom follows a microservices architecture with a React frontend:
         │                │                 │
  ┌──────▼─────────┐ ┌────▼──────────┐ ┌────▼─────────────┐
  │ Payment Service│ │Booking Service│ │ Contact Service  │
- │   Port: 8084   │ │   Port: 8085   │ │   Port: 8083     │
- │                │ │                │ │                 │
- │ - Stripe Pay   │ │ - Bookings     │ │ - Email Inquiries│
- │ - Webhooks     │ │ - Status Mgmt  │ │ - Auto-replies   │
- └────────────────┘ └────────────────┘ └─────────────────┘
+ │   Port: 8084   │ │   Port: 8085  │ │   Port: 8083     │
+ │                │ │               │ │                  │
+ │ - Razorpay Pay │ │ - Bookings    │ │ - Notifications  │
+ │ - Webhooks     │ │ - Status Mgmt │ │ - Auto-replies   │
+ └────────────────┘ └───────────────┘ └──────────────────┘
                          │
                 ┌────────▼─────────┐
                 │   MongoDB        │
@@ -53,6 +53,7 @@ Modern frontend interface built with React and Vite:
 - Responsive design with TailwindCSS
 - **User Dashboard with Booking Management**
 - **Multi-step Booking Wizard**
+- **Integrated Theme Support (Dark/Light Mode)**
 - Integrated authentication flows
 - Service browsing and filtering
 
@@ -71,8 +72,10 @@ Specialized Home Cleaning Service platform:
 
 ### Payment Service
 Handles payments and transactions:
-- Stripe Payment Intent creation
-- Webhook handling for payment status updates
+- Razorpay Order creation
+- Payment verification with cryptographic signatures
+- Refund processing for cancelled bookings
+- Webhook handling for payment status updates (Future)
 
 ### Booking Service
 Handles service bookings and scheduling:
@@ -171,9 +174,10 @@ ALLOWED_ORIGINS=http://localhost:5173,https://your-production-app.onrender.com
 **server/payment-service/.env**:
 ```env
 PORT=8084
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
+RAZORPAY_KEY_ID=rzp_test_...
+RAZORPAY_KEY_SECRET=your-secret-key
 ALLOWED_ORIGINS=http://localhost:5173,https://your-production-app.onrender.com
+BOOKING_SERVICE_URL=http://localhost:8085
 ```
 
 > **Note**: The service-catalog shares `MONGO_URI`, `JWT_SECRET`, and `NODE_ENV` from auth-service's `.env` file in development.
@@ -274,9 +278,10 @@ Ensure you set the **Root Directory** correctly for each service (e.g., `server/
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| POST | `/api/v1/payments/create-intent` | Create Stripe Payment Intent | ✅ |
+| POST | `/api/v1/payments/create-order` | Create Razorpay Order | ✅ |
+| POST | `/api/v1/payments/verify` | Verify Razorpay Payment | ✅ |
+| POST | `/api/v1/payments/refund` | Refund a payment | ✅ |
 | GET | `/api/v1/payments/status/:id` | Get payment status | ✅ |
-| POST | `/api/v1/payments/webhook` | Stripe Webhook handler | ❌ |
 
 ### Booking Service (Port 8085)
 
@@ -416,9 +421,9 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deta
  - **Framework**: Express.js
  - **Database**: MongoDB with Mongoose
  - **Authentication**: JWT (JSON Web Tokens)
- - **Email**: Nodemailer / SendGrid
  - **Validation**: Express Validator
- - **Payments**: Stripe
+ - **Payments**: Razorpay
+ - **Theme**: TailwindCSS (Dark/Light Mode)
 
 ## 📚 Documentation
 
