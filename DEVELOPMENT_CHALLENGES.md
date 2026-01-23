@@ -797,7 +797,75 @@ Frontend errors (API failures, network issues, JS crashes) were often silent or 
 ### Lessons Learned
 - Centralized error handling significantly reduces the amount of repetitive error-checking code in individual components.
 - Real-time feedback via toasts improves user trust and helps in debugging "in-the-wild" issues.
+---
+
+## 15. Stripe to Razorpay Migration
+
+### Challenge
+Migrating from Stripe to Razorpay to better support the target market (India) and simplify the payment verification flow.
+
+### Solution
+1. **Infrastructure**: Replaced `stripe` package with `razorpay`.
+2. **Order Flow**: Implemented a two-step payment flow:
+   - Backend creates a Razorpay Order (`createOrder`).
+   - Frontend opens Razorpay Checkout using the `order_id`.
+   - Backend verifies the payment signature (`verifyPayment`) on completion.
+3. **Security**: Used HMAC SHA256 for cryptographic verification of `razorpay_signature` to prevent spoofing.
+
+### Lessons Learned
+- Razorpay expects amounts in the smallest currency unit (paise for INR), requiring careful multiplication by 100.
+- Signature verification is critical for security in Razorpay's client-side integration flow.
 
 ---
 
-*Last Updated: January 16, 2026*
+## 16. Razorpay Refund Integration
+
+### Challenge
+Implementing automated refunds when a user cancels a booking, ensuring the payment status is updated across microservices.
+
+### Solution
+1. **API Integration**: Used `razorpay.payments.refund()` to initiate refunds.
+2. **State Management**: Updated `Payment` model status to `refunded` only after successful API confirmation.
+3. **Frontend UX**: Added confirmation dialogs to inform users about the refund process when they click "Cancel Booking".
+
+---
+
+## 17. Database Schema Evolution (Payment Model)
+
+### Challenge
+Duplicate key errors (`E11000`) on `stripePaymentIntentId` index after migrating to Razorpay, as new records had `null` values for the old Stripe index.
+
+### Solution
+1. **Model Update**: Replaced `stripePaymentIntentId` with `razorpayOrderId` and `razorpayPaymentId`.
+2. **Index Fix**: Cleaned up the MongoDB collection to remove the old unique index on the Stripe field.
+3. **Schema Design**: Made `razorpayOrderId` the primary unique reference for tracking payments in the database.
+
+---
+
+## 18. User-Friendly Validation Error Handling
+
+### Challenge
+Backend validation errors (Mongoose/Express Validator) were being sent raw to the frontend, resulting in ugly messages like `"Booking validation failed: details.phone: Path 'details.phone' is required."`
+
+### Solution
+1. **Error Interceptor**: Implemented a parser in the frontend `apiClient.ts` to transform structured backend validation errors into human-readable strings.
+2. **UI Feedback**: Used `react-hot-toast` to display cleaned-up error messages directly to the user.
+
+---
+
+## 19. Dark Mode Implementation
+
+### Challenge
+Implementing a toggleable dark mode that persists across sessions and doesn't flicker on page load.
+
+### Solution
+1. **CSS Variables**: Defined a comprehensive set of CSS variables for colors (backgrounds, text, accents) in `index.css`.
+2. **Theme Context**: Created a `ThemeProvider` (or used Tailwind's class strategy) to manage the `dark` class on the `<html>` element.
+3. **Persistence**: Saved the user's preference in `localStorage`.
+4. **UI**: Added a `ThemeToggle` component to the `Navbar` with smooth icon transitions.
+
+---
+
+---
+
+*Last Updated: January 23, 2026*
