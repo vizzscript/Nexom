@@ -1,21 +1,21 @@
 import { Router } from "express";
 import serviceController from "../controllers/service.controller";
-// import { authenticate } from "../middleware"; // Assuming this path is correct
+import { authenticate, requireAdmin } from "../middleware";
 
 const serviceRouter = Router();
 
 // Apply authentication middleware to all service routes (e.g., requires login)
 // serviceRouter.use(authenticate);
 
-// BULK CREATE ROUTE (POST /api/services/bulk)
-serviceRouter.post("/bulk", serviceController.bulkCreate);
+// Public read endpoints
+serviceRouter.get("/", serviceController.getAll);
+serviceRouter.get("/:id", serviceController.getOne);
 
-// CRUD Endpoints for Services
-serviceRouter.post("/", serviceController.create);             // Create a new service
-serviceRouter.get("/", serviceController.getAll);              // Get all services
-serviceRouter.get("/:id", serviceController.getOne);           // Get service by ID
-serviceRouter.patch("/:id", serviceController.update);         // Update service by ID
-serviceRouter.delete("/:id", serviceController.delete);         // Delete service by ID
+// Admin endpoints
+serviceRouter.post("/bulk", authenticate, requireAdmin, serviceController.bulkCreate);
+serviceRouter.post("/", authenticate, requireAdmin, serviceController.create);
+serviceRouter.patch("/:id", authenticate, requireAdmin, serviceController.update);
+serviceRouter.delete("/:id", authenticate, requireAdmin, serviceController.delete);
 
 
 export default serviceRouter;

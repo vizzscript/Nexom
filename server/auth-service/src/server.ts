@@ -5,7 +5,6 @@ import config from "./config/config";
 import { connectDB } from "./database";
 import { errorConverter, errorHandler } from "./middleware";
 import userRouter from "./routes/authRoutes";
-import { rabbitMQService } from "./services/RabbitMQService";
 
 import cors from "cors";
 
@@ -45,14 +44,6 @@ const startServer = async () => {
             console.log(`CORS allowed for: ${allowedOrigins.join(', ')}`);
         });
 
-        // Initialize RabbitMQ client (non-blocking if it fails)
-        try {
-            await rabbitMQService.init();
-            console.log("RabbitMQ client initialized and listening for messages.");
-        } catch (rabbitMQError) {
-            console.warn("Warning: RabbitMQ connection failed. Server will continue without message queue functionality.");
-            console.warn("RabbitMQ Error:", rabbitMQError);
-        }
     } catch (err) {
         console.error("Failed to start server:", err);
         process.exit(1);

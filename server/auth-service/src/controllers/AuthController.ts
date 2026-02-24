@@ -20,8 +20,19 @@ const cookieOptions = {
 // JWT TOKEN CREATOR
 // ---------------------------------------------
 const createSendToken = (user: any, res: Response) => {
+    const adminEmails = (process.env.ADMIN_EMAILS || "")
+        .split(",")
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean);
+    const role = adminEmails.includes(String(user.email).toLowerCase()) ? "admin" : "user";
+
     const token = jwt.sign(
-        { id: user._id, email: user.email },
+        {
+            id: user._id,
+            email: user.email,
+            firebaseUid: user.firebaseUid,
+            role,
+        },
         jwtSecret,
         { expiresIn: "15m" }
     );
@@ -78,6 +89,12 @@ export const firebaseLogin = async (req: Request, res: Response) => {
         // Generate App JWT
         const appToken = createSendToken(user, res);
 
+        const adminEmails = (process.env.ADMIN_EMAILS || "")
+            .split(",")
+            .map((adminEmail) => adminEmail.trim().toLowerCase())
+            .filter(Boolean);
+        const role = adminEmails.includes(String(user.email).toLowerCase()) ? "admin" : "user";
+
         return res.status(200).json({
             status: 200,
             message: "Logged in successfully!",
@@ -87,7 +104,8 @@ export const firebaseLogin = async (req: Request, res: Response) => {
                 email: user.email,
                 name: user.name,
                 photoUrl: user.photoUrl,
-                firebaseUid: uid
+                firebaseUid: uid,
+                role,
             }
         });
 

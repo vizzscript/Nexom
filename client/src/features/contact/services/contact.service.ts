@@ -40,24 +40,34 @@ export interface ContactMessage {
 
 const CONTACT_API_URL = `${ENV_CONFIG.CONTACT_SERVICE_URL}/contact`;
 
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+    };
+};
+
 export const contactService = {
     submitContactForm: async (formData: any): Promise<ContactResponse> => {
-        const response = await axios.post<ContactResponse>(`${CONTACT_API_URL}/submit`, formData);
+        const response = await axios.post<ContactResponse>(`${CONTACT_API_URL}/submit`, formData, getAuthHeaders());
         return response.data;
     },
 
     getMessages: async (): Promise<ContactMessage[]> => {
-        const response = await axios.get<ContactMessage[]>(`${CONTACT_API_URL}/messages`);
+        const response = await axios.get<ContactMessage[]>(`${CONTACT_API_URL}/messages`, getAuthHeaders());
         return Array.isArray(response.data) ? response.data : [];
     },
 
     markAsRead: async (id: string): Promise<any> => {
-        const response = await axios.patch(`${CONTACT_API_URL}/messages/${id}/read`);
+        const response = await axios.patch(`${CONTACT_API_URL}/messages/${id}/read`, {}, getAuthHeaders());
         return response.data;
     },
 
     deleteMessage: async (id: string): Promise<any> => {
-        const response = await axios.delete(`${CONTACT_API_URL}/messages/${id}`);
+        const response = await axios.delete(`${CONTACT_API_URL}/messages/${id}`, getAuthHeaders());
         return response.data;
     }
 };

@@ -5,7 +5,12 @@ import ContactMessage from "../models/ContactMessage"; // Ensure you create this
 
 export const submitContactForm = async (req: Request, res: Response) => {
     try {
-        const { firstName, lastName, email, phone, subject, message, userId } = req.body;
+        const requester = req.user;
+        const { firstName, lastName, email, phone, subject, message } = req.body;
+
+        if (!requester?.subject) {
+            return res.status(401).json({ status: 401, message: "Authentication required." });
+        }
 
         if (!firstName || !email || !message) {
             return res.status(400).json({ status: 400, message: "Required fields missing." });
@@ -19,13 +24,13 @@ export const submitContactForm = async (req: Request, res: Response) => {
         const newMessage = await ContactMessage.create({
             firstName,
             lastName,
-            email,
+            email: requester.email || email,
             phone,
             subject,
             message,
             notificationTitle,
             notificationBody,
-            userId,
+            userId: requester.subject,
             status: 'pending'
         });
 
@@ -50,7 +55,13 @@ export const submitContactForm = async (req: Request, res: Response) => {
 // GET all messages for the Admin Panel
 export const fetchMessages = async (req: Request, res: Response) => {
     try {
-        const messages = await ContactMessage.find().sort({ createdAt: -1 });
+        const requester = req.user;
+        if (!requester?.subject) {
+            return res.status(401).json({ message: "Authentication required" });
+        }
+
+        const query = requester.role === "admin" ? {} : { userId: requester.subject };
+        const messages = await ContactMessage.find(query).sort({ createdAt: -1 });
         return res.status(200).json(messages);
     } catch (error) {
         return res.status(500).json({ message: "Failed to fetch messages" });
@@ -60,7 +71,21 @@ export const fetchMessages = async (req: Request, res: Response) => {
 // PATCH to mark a message as read
 export const markAsRead = async (req: Request, res: Response) => {
     try {
+        const requester = req.user;
+        if (!requester?.subject) {
+            return res.status(401).json({ message: "Authentication required" });
+        }
+
         const { id } = req.params;
+        const existingMessage = await ContactMessage.findById(id);
+        if (!existingMessage) {
+            return res.status(404).json({ message: "Message not found" });
+        }
+
+        if (requester.role !== "admin" && existingMessage.userId !== requester.subject) {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+
         const message = await ContactMessage.findByIdAndUpdate(id, { isRead: true }, { new: true });
         if (!message) {
             return res.status(404).json({ message: "Message not found" });
@@ -74,7 +99,21 @@ export const markAsRead = async (req: Request, res: Response) => {
 // DELETE a message
 export const deleteMessage = async (req: Request, res: Response) => {
     try {
+        const requester = req.user;
+        if (!requester?.subject) {
+            return res.status(401).json({ message: "Authentication required" });
+        }
+
         const { id } = req.params;
+        const existingMessage = await ContactMessage.findById(id);
+        if (!existingMessage) {
+            return res.status(404).json({ message: "Message not found" });
+        }
+
+        if (requester.role !== "admin" && existingMessage.userId !== requester.subject) {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+
         const message = await ContactMessage.findByIdAndDelete(id);
         if (!message) {
             return res.status(404).json({ message: "Message not found" });

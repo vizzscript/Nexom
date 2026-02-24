@@ -87,10 +87,17 @@ export const verifyPayment = async (req: Request, res: Response) => {
                 try {
                     const bookingId = updatedPayment.bookingId;
                     const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL;
+                    const BOOKING_INTERNAL_TOKEN = process.env.BOOKING_INTERNAL_TOKEN;
 
-                    await axios.patch(`${BOOKING_SERVICE_URL}/api/v1/bookings/${bookingId}`, {
-                        status: 'Paid'
-                    });
+                    await axios.patch(
+                        `${BOOKING_SERVICE_URL}/api/v1/bookings/internal/${bookingId}/status`,
+                        { status: 'Paid' },
+                        {
+                            headers: {
+                                'x-internal-token': BOOKING_INTERNAL_TOKEN || '',
+                            },
+                        }
+                    );
                     console.log(`Booking Service notified for Booking: ${bookingId}`);
                 } catch (notifyError: any) {
                     console.error(`Failed to notify Booking Service: ${notifyError.message}`);

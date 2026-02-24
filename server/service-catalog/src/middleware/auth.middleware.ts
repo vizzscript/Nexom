@@ -10,6 +10,9 @@ declare global {
             user?: {
                 id: string;
                 email: string;
+                role: string;
+                firebaseUid?: string;
+                subject: string;
             };
         }
     }
@@ -18,6 +21,8 @@ declare global {
 interface JwtPayload {
     id: string;
     email: string;
+    role?: string;
+    firebaseUid?: string;
     iat: number;
     exp: number;
 }
@@ -49,7 +54,10 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         // Attach user info to request object
         req.user = {
             id: decoded.id,
-            email: decoded.email
+            email: decoded.email,
+            role: decoded.role || "user",
+            firebaseUid: decoded.firebaseUid,
+            subject: decoded.firebaseUid || decoded.id,
         };
 
         next();
@@ -82,4 +90,22 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
             message: "Authentication failed"
         });
     }
+};
+
+export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+        return res.status(401).json({
+            status: 401,
+            message: "Authentication required",
+        });
+    }
+
+    if (req.user.role !== "admin") {
+        return res.status(403).json({
+            status: 403,
+            message: "Admin access required",
+        });
+    }
+
+    next();
 };
