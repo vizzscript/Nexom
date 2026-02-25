@@ -111,3 +111,12 @@ Key structural conventions:
 - **Backend response shape:** `{ status: <number>, message: <string>, data?: <any> }` with matching HTTP status codes.
 - **Path aliases:** Client uses `@/` for `src/`. Server auth-service uses `@common/*` for `../common/*`.
 - **Extending Express Request:** done via `declare global { namespace Express { interface Request { ... } } }` in middleware files (not separate `.d.ts`).
+
+## Session Tracking
+
+- Before ending any work session, always append/update `project-chat-notes/sessions/YYYY-MM-DD.md` with:
+  - context discussed
+  - decisions made
+  - actions taken
+  - next steps
+- Use `project-chat-notes/SESSION_TEMPLATE.md` as the default format for new session files.

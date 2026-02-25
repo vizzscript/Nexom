@@ -168,12 +168,21 @@ export class BookingController {
                 return res.status(400).json({ success: false, message: 'Invalid status value' });
             }
 
-            const booking = await Booking.findByIdAndUpdate(id, { status }, { new: true });
+            const booking = await Booking.findById(id);
             if (!booking) {
                 return res.status(404).json({ success: false, message: 'Booking not found' });
             }
 
-            return res.status(200).json({ success: true, data: booking });
+            if (booking.status === status) {
+                return res.status(200).json({ success: true, data: booking, message: 'Status already up to date' });
+            }
+
+            const updatedBooking = await Booking.findByIdAndUpdate(id, { status }, { new: true });
+            if (!updatedBooking) {
+                return res.status(404).json({ success: false, message: 'Booking not found' });
+            }
+
+            return res.status(200).json({ success: true, data: updatedBooking });
         } catch (error: any) {
             return res.status(500).json({ success: false, message: error.message });
         }

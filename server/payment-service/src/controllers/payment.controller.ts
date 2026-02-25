@@ -1,8 +1,12 @@
-import axios from 'axios';
 import crypto from 'crypto';
 import { Request, Response } from 'express';
 import { razorpay } from '../config/razorpay';
 import Payment from '../models/payment.model';
+import {
+    markBookingSyncFailure,
+    markBookingSynced,
+    syncBookingStatusToPaid
+} from '../services/booking-sync.service';
 
 export const createOrder = async (req: Request, res: Response) => {
     try {
@@ -35,6 +39,11 @@ export const createOrder = async (req: Request, res: Response) => {
             amount: amount,
             currency: currency,
             status: 'pending',
+            bookingSyncStatus: 'pending',
+            bookingSyncRetryCount: 0,
+            bookingSyncNextRetryAt: null,
+            bookingSyncLastError: null,
+            bookingSyncedAt: null,
             customerEmail: customerEmail,
         });
 
@@ -85,23 +94,16 @@ export const verifyPayment = async (req: Request, res: Response) => {
 
                 // Notify Booking Service
                 try {
-                    const bookingId = updatedPayment.bookingId;
-                    const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL;
-                    const BOOKING_INTERNAL_TOKEN = process.env.BOOKING_INTERNAL_TOKEN;
-
-                    await axios.patch(
-                        `${BOOKING_SERVICE_URL}/api/v1/bookings/internal/${bookingId}/status`,
-                        { status: 'Paid' },
-                        {
-                            headers: {
-                                'x-internal-token': BOOKING_INTERNAL_TOKEN || '',
-                            },
-                        }
-                    );
-                    console.log(`Booking Service notified for Booking: ${bookingId}`);
+                    await syncBookingStatusToPaid(updatedPayment);
+                    await markBookingSynced(String(updatedPayment._id));
+                    console.log(`Booking Service notified for Booking: ${updatedPayment.bookingId}`);
                 } catch (notifyError: any) {
                     console.error(`Failed to notify Booking Service: ${notifyError.message}`);
-                    // We don't fail the response here, but we should log it
+                    await markBookingSyncFailure(
+                        String(updatedPayment._id),
+                        updatedPayment.bookingSyncRetryCount || 0,
+                        notifyError.message || 'Booking sync failed during verify-payment'
+                    );
                 }
             }
 

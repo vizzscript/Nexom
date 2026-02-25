@@ -1,6 +1,8 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
+import { startBookingSyncReconcileJob } from './jobs/booking-sync-reconcile.job';
+import { startBookingSyncRetryJob } from './jobs/booking-sync-retry.job';
 import mongoose from 'mongoose';
 import paymentRoutes from './routes/payment.routes';
 
@@ -47,6 +49,8 @@ mongoose.connect(MONGO_URI)
         console.log('Connected to MongoDB (Payments)');
         app.listen(PORT, () => {
             console.log(`Payment Service is running on port ${PORT}`);
+            startBookingSyncRetryJob();
+            startBookingSyncReconcileJob();
         });
     })
     .catch((err) => {
