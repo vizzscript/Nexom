@@ -40,6 +40,12 @@ function App() {
     };
   }, []);
 
+  console.log('Home', Home);
+  console.log('Services', Services);
+  console.log('BookService', BookService);
+  console.log('Dashboard', Dashboard);
+  console.log('MainLayout', MainLayout);
+
   return (
     <ThemeProvider>
       <Router>

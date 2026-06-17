@@ -1,9 +1,6 @@
 import { config } from "dotenv";
 
-if (process.env.NODE_ENV !== 'production') {
-    const configFile = `./.env`;
-    config({ path: configFile });
-}
+config({ path: "./.env" });
 
 const { CONTACT_PORT, NODE_ENV, MONGO_URI } = process.env;
 

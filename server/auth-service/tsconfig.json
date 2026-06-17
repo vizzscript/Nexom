@@ -12,7 +12,7 @@
     /* IMPORTANT FIXES */
     "rootDir": "..", // Allow TS to compile files from parent server directory
     "baseUrl": ".", // Enable aliases
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "paths": {
       "@/*": [
         "src/*"
