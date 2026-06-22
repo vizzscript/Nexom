@@ -1,8 +1,15 @@
 import { motion } from 'framer-motion';
 import { Award, Heart, Target, Users } from 'lucide-react';
 import React from 'react';
-import CountUp from 'react-countup';
+import CountUpModule from 'react-countup';
 import { useInView } from 'react-intersection-observer';
+
+// react-countup is published as CommonJS and Vite can expose its component
+// through a second `default` layer during development.
+const CountUp = (
+    (CountUpModule as unknown as { default?: typeof CountUpModule }).default
+    ?? CountUpModule
+) as typeof CountUpModule;
 
 const About: React.FC = () => {
     // Detects when the section enters the viewport
