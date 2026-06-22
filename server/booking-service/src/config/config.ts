@@ -14,6 +14,6 @@ export default {
         secret: process.env.JWT_SECRET || 'secret',
     },
     allowedOrigins: process.env.ALLOWED_ORIGINS
-        ? process.env.ALLOWED_ORIGINS.split(',')
-        : ['http://localhost:5173'],
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim().replace(/\/$/, ''))
+    : ['http://localhost:5173'],
 };

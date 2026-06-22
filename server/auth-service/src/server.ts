@@ -47,8 +47,8 @@ const startServer = async () => {
 
         // Initialize RabbitMQ client (non-blocking if it fails)
         try {
-            await rabbitMQService.init();
-            console.log("RabbitMQ client initialized and listening for messages.");
+            // await rabbitMQService.init();
+            // console.log("RabbitMQ client initialized and listening for messages.");
         } catch (rabbitMQError) {
             console.warn("Warning: RabbitMQ connection failed. Server will continue without message queue functionality.");
             console.warn("RabbitMQ Error:", rabbitMQError);
